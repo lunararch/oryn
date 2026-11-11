@@ -10,11 +10,10 @@ RUN npm run build
 FROM golang:1.27.4-alpine AS server
 ARG VERSION=dev
 WORKDIR /src
-COPY go.work ./
 COPY apps/server/go.mod apps/server/go.sum ./apps/server/
-RUN cd apps/server && go mod download
+RUN cd apps/server && GOWORK=off go mod download
 COPY apps/server/ ./apps/server/
-RUN cd apps/server && CGO_ENABLED=0 go build -trimpath \
+RUN cd apps/server && GOWORK=off CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w -X main.version=${VERSION}" \
     -o /out/oryn-server ./cmd/oryn-server
 

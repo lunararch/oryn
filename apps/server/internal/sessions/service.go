@@ -215,6 +215,9 @@ func (s *Service) StartDesktop(ctx context.Context, clientID, gameID string) (Se
 		UpdatedAt:       now.Unix(),
 		LastHeartbeatAt: sql.NullInt64{Int64: now.Unix(), Valid: true},
 	}); err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "unique") {
+			return Session{}, ErrAlreadyRunning
+		}
 		return Session{}, fmt.Errorf("start desktop session: %w", err)
 	}
 	return s.Get(ctx, id)

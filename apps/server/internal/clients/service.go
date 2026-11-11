@@ -120,7 +120,12 @@ func (s *Service) Register(ctx context.Context, code, name, platform string) (Cl
 		RegisteredAt: now.Unix(),
 		LastSeenAt:   now.Unix(),
 	}
-	if err := q.CreateDesktopClient(ctx, db.CreateDesktopClientParams{
+	tx, err := s.store.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return Client{}, "", fmt.Errorf("begin registration: %w", err)
+	}
+	qtx := db.New(tx)
+	if err := qtx.CreateDesktopClient(ctx, db.CreateDesktopClientParams{
 		ID:           client.ID,
 		Name:         client.Name,
 		Platform:     client.Platform,
@@ -128,13 +133,18 @@ func (s *Service) Register(ctx context.Context, code, name, platform string) (Cl
 		RegisteredAt: client.RegisteredAt,
 		LastSeenAt:   client.LastSeenAt,
 	}); err != nil {
+		_ = tx.Rollback()
 		return Client{}, "", fmt.Errorf("create client: %w", err)
 	}
-	if err := q.MarkPairingCodeUsed(ctx, db.MarkPairingCodeUsedParams{
+	if err := qtx.MarkPairingCodeUsed(ctx, db.MarkPairingCodeUsedParams{
 		UsedAt: sql.NullInt64{Int64: now.Unix(), Valid: true},
 		ID:     matched.ID,
 	}); err != nil {
+		_ = tx.Rollback()
 		return Client{}, "", fmt.Errorf("consume pairing code: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return Client{}, "", fmt.Errorf("commit registration: %w", err)
 	}
 	return client, token, nil
 }
