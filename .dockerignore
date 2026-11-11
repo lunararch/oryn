@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/dist
+**/.git
+data
+*.db
+*.db-shm
+*.db-wal
+.env
+apps/frontend/coverage
+apps/frontend/playwright-report
+apps/frontend/test-results

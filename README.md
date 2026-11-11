@@ -11,7 +11,16 @@ The full product plan lives in `oryn_renpy-library-project-plan.md`. Project eng
 
 ## Status
 
-Early implementation. The first milestone is the central library: scan a game directory, index Ren'Py games, and browse/manage them in the web UI.
+The central library milestone is implemented: the server scans a read-only game directory, indexes Ren'Py games, extracts conservative metadata, detects artwork, and serves a React library with search, sorting, favorites, metadata editing, artwork uploads, and scan history.
+
+Not implemented yet: collections, play sessions, desktop client/pairing, and local game launching. See `docs/architecture.md` for the boundary between implemented and planned behavior.
+
+Documentation:
+
+- `docs/architecture.md` — components, data model, scanning safety
+- `docs/api.md` — HTTP contract
+- `docs/development.md` — local setup and code generation
+- `docs/deployment.md` — Raspberry Pi deployment and backups
 
 ## Repository layout
 

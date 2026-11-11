@@ -110,6 +110,15 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		Queries: queries,
 		Artwork: artworkService,
 	})
+	var httpHandler http.Handler = handler
+	if cfg.WebDir != "" {
+		spa, err := newSPAHandler(handler, cfg.WebDir)
+		if err != nil {
+			_ = s.Close()
+			return nil, err
+		}
+		httpHandler = spa
+	}
 
 	return &App{
 		cfg:    cfg,
@@ -118,7 +127,7 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		probe:  probe,
 		server: &http.Server{
 			Addr:              cfg.HTTPAddr,
-			Handler:           handler,
+			Handler:           httpHandler,
 			ReadHeaderTimeout: 10 * time.Second,
 			IdleTimeout:       60 * time.Second,
 		},

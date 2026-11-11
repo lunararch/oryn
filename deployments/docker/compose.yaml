@@ -1,0 +1,40 @@
+services:
+  oryn:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+      args:
+        VERSION: ${ORYN_VERSION:-dev}
+    container_name: oryn
+    restart: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "${ORYN_PORT:-8080}:8080"
+    environment:
+      ORYN_HTTP_ADDR: ":8080"
+      ORYN_DATA_DIR: "/data"
+      ORYN_WEB_DIR: "/app/web"
+      ORYN_LIBRARY_ROOT: "/games"
+      ORYN_LIBRARY_SENTINEL: "${ORYN_LIBRARY_SENTINEL:-}"
+      ORYN_SCAN_INTERVAL: "${ORYN_SCAN_INTERVAL:-6h}"
+      ORYN_SCAN_MAX_DEPTH: "3"
+      ORYN_SCAN_WORKERS: "2"
+      ORYN_LOG_LEVEL: "${ORYN_LOG_LEVEL:-info}"
+    volumes:
+      - type: bind
+        source: ${ORYN_GAMES_PATH:-/srv/games}
+        target: /games
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./data
+        target: /data
+        bind:
+          create_host_path: true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
