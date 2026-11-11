@@ -35,6 +35,8 @@ export interface Game {
   bannerArtworkId?: string;
   addedAt: string;
   lastSeenAt: string;
+  lastPlayedAt?: string;
+  playtimeSeconds: number /* int */;
 }
 export interface GamesResponse {
   items: Game[];
@@ -58,6 +60,30 @@ export interface Stats {
   available: number /* int */;
   missing: number /* int */;
   favorites: number /* int */;
+  playedGames: number /* int */;
+  playtimeSeconds: number /* int */;
+}
+export interface PlaySession {
+  id: string;
+  gameId: string;
+  startedAt: string;
+  endedAt?: string;
+  durationSeconds: number /* int */;
+  status: string;
+  source: string;
+  exitCode?: number /* int */;
+  notes: string;
+}
+export interface PlaySessionsResponse {
+  items: PlaySession[];
+  page: number /* int */;
+  pageSize: number /* int */;
+  total: number /* int */;
+}
+export interface SessionRequest {
+  startedAt: string;
+  endedAt: string;
+  notes: string;
 }
 export interface ScanState {
   id?: string;

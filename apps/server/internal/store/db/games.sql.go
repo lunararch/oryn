@@ -127,7 +127,9 @@ SELECT g.id, g.library_id, g.relative_path, g.folder_name, g.detected_title, g.d
        o.completion_status AS override_completion_status,
        EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite,
        CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'cover'), '') AS TEXT) AS cover_artwork_id,
-       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS TEXT) AS banner_artwork_id
+       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS TEXT) AS banner_artwork_id,
+       CAST(COALESCE((SELECT MAX(ps.started_at) FROM play_sessions ps WHERE ps.game_id = g.id), 0) AS INTEGER) AS last_played_at,
+       CAST(COALESCE((SELECT SUM(ps.duration_seconds) FROM play_sessions ps WHERE ps.game_id = g.id AND ps.status IN ('completed', 'interrupted')), 0) AS INTEGER) AS playtime_seconds
 FROM games g
 LEFT JOIN game_overrides o ON o.game_id = g.id
 WHERE g.id = ?
@@ -163,6 +165,8 @@ type GetGameRow struct {
 	IsFavorite               bool
 	CoverArtworkID           string
 	BannerArtworkID          string
+	LastPlayedAt             int64
+	PlaytimeSeconds          int64
 }
 
 func (q *Queries) GetGame(ctx context.Context, id string) (GetGameRow, error) {
@@ -198,6 +202,8 @@ func (q *Queries) GetGame(ctx context.Context, id string) (GetGameRow, error) {
 		&i.IsFavorite,
 		&i.CoverArtworkID,
 		&i.BannerArtworkID,
+		&i.LastPlayedAt,
+		&i.PlaytimeSeconds,
 	)
 	return i, err
 }

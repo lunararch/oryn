@@ -70,6 +70,21 @@ type Library struct {
 	LastScanAt sql.NullInt64
 }
 
+type PlaySession struct {
+	ID              string
+	GameID          string
+	ClientID        sql.NullString
+	StartedAt       int64
+	EndedAt         sql.NullInt64
+	DurationSeconds int64
+	Status          string
+	Source          string
+	ExitCode        sql.NullInt64
+	Notes           string
+	CreatedAt       int64
+	UpdatedAt       int64
+}
+
 type ScanError struct {
 	ID        string
 	ScanRunID string

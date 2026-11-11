@@ -5,6 +5,7 @@ import type { Game } from "../lib/api/generated";
 import { artworkUrl } from "../lib/api/artwork";
 import { Badge } from "./ui/Badge";
 import { GamePoster } from "./GamePoster";
+import { formatDuration } from "../lib/duration";
 
 export type GameView = "grid" | "list";
 
@@ -81,6 +82,9 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
           <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
             {completion ? <Badge tone="brass">{completion}</Badge> : null}
             {game.rating ? <Badge tone="quiet">★ {game.rating}</Badge> : null}
+            {game.playtimeSeconds > 0 ? (
+              <Badge tone="quiet">{formatDuration(game.playtimeSeconds)}</Badge>
+            ) : null}
             {game.version ? <Badge tone="quiet">v{game.version}</Badge> : null}
           </div>
         </div>

@@ -13,6 +13,7 @@ import (
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
+	"github.com/lunararch/oryn/apps/server/internal/sessions"
 	"github.com/lunararch/oryn/apps/server/internal/store/db"
 )
 
@@ -37,6 +38,7 @@ type Options struct {
 	Scans         *scanner.Manager
 	Queries       *db.Queries
 	Artwork       *artwork.Service
+	Sessions      *sessions.Service
 }
 
 // New builds the HTTP API router.
@@ -59,6 +61,10 @@ func New(opts Options) http.Handler {
 		r.Delete("/games/{gameID}/favorite", opts.removeFavorite)
 		r.Post("/games/{gameID}/artwork", opts.uploadArtwork)
 		r.Delete("/games/{gameID}/artwork/{kind}", opts.deleteArtwork)
+		r.Post("/games/{gameID}/sessions", opts.createSession)
+		r.Get("/games/{gameID}/sessions", opts.listSessions)
+		r.Patch("/sessions/{sessionID}", opts.updateSession)
+		r.Delete("/sessions/{sessionID}", opts.deleteSession)
 
 		r.Get("/stats", opts.getStats)
 		r.Get("/artwork/{artworkID}/{variant}", opts.getArtwork)

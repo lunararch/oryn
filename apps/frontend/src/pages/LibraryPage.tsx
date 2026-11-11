@@ -16,6 +16,8 @@ const sortOptions = [
   { value: "title:asc", label: "Title A–Z" },
   { value: "title:desc", label: "Title Z–A" },
   { value: "added:desc", label: "Recently added" },
+  { value: "lastPlayed:desc", label: "Recently played" },
+  { value: "playtime:desc", label: "Most played" },
   { value: "lastSeen:desc", label: "Recently seen" },
 ];
 

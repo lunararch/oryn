@@ -1,23 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UpdateGameRequest } from "./generated";
 import {
+  createSession,
   deleteArtwork,
+  deleteSession,
   getCurrentScan,
   getGame,
   getLibraries,
   getStats,
   listGames,
   listScans,
+  listSessions,
   setFavorite,
   startScan,
   updateGame,
+  updateSession,
   uploadArtwork,
   type ListGamesParams,
+  type SessionInput,
 } from "./client";
 
 export const queryKeys = {
   games: (params: ListGamesParams) => ["games", params] as const,
   game: (id: string) => ["game", id] as const,
+  sessions: (gameID: string) => ["sessions", gameID] as const,
   stats: ["stats"] as const,
   libraries: ["libraries"] as const,
   currentScan: ["scan", "current"] as const,
@@ -100,6 +106,61 @@ export function useStartScan() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.currentScan });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scans });
+    },
+  });
+}
+
+export function useSessions(gameID: string) {
+  return useQuery({
+    queryKey: queryKeys.sessions(gameID),
+    queryFn: () => listSessions(gameID),
+    enabled: Boolean(gameID),
+  });
+}
+
+export function useCreateSession() {
+  const queryClient = useQueryClient();
+  const invalidateLibrary = useInvalidateLibrary();
+  return useMutation({
+    mutationFn: ({ gameID, input }: { gameID: string; input: SessionInput }) =>
+      createSession(gameID, input),
+    onSuccess: (session) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions(session.gameId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.game(session.gameId) });
+      invalidateLibrary();
+    },
+  });
+}
+
+export function useUpdateSession() {
+  const queryClient = useQueryClient();
+  const invalidateLibrary = useInvalidateLibrary();
+  return useMutation({
+    mutationFn: ({
+      sessionID,
+      input,
+    }: {
+      sessionID: string;
+      gameID: string;
+      input: SessionInput;
+    }) => updateSession(sessionID, input),
+    onSuccess: (session) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions(session.gameId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.game(session.gameId) });
+      invalidateLibrary();
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const queryClient = useQueryClient();
+  const invalidateLibrary = useInvalidateLibrary();
+  return useMutation({
+    mutationFn: ({ sessionID }: { sessionID: string; gameID: string }) => deleteSession(sessionID),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessions(variables.gameID) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.game(variables.gameID) });
+      invalidateLibrary();
     },
   });
 }

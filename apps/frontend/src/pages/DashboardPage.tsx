@@ -1,4 +1,4 @@
-import { ArrowRight, Clock3, Heart, LibraryBig, ScanLine } from "lucide-react";
+import { ArrowRight, Clock3, Heart, LibraryBig, Timer } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { GameGrid, GameGridSkeleton } from "../components/GameGrid";
@@ -7,12 +7,14 @@ import { ScanStatus } from "../components/ScanStatus";
 import { EmptyState } from "../components/ui/EmptyState";
 import { useGames, useLibraries, useStats } from "../lib/api/queries";
 import { formatDate, formatNumber } from "../lib/format";
+import { formatDuration } from "../lib/duration";
 
 export function DashboardPage() {
   const stats = useStats();
   const libraries = useLibraries();
   const recent = useGames({ sort: "added", order: "desc", pageSize: 6 });
   const favorites = useGames({ favorite: true, sort: "title", order: "asc", pageSize: 6 });
+  const recentlyPlayed = useGames({ played: true, sort: "lastPlayed", order: "desc", pageSize: 6 });
 
   const library = libraries.data?.items[0];
   const total = stats.data?.total ?? 0;
@@ -54,7 +56,12 @@ export function DashboardPage() {
         <div className="relative mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Games" value={stats.data?.total ?? 0} icon={LibraryBig} />
           <Stat label="Favorites" value={stats.data?.favorites ?? 0} icon={Heart} />
-          <Stat label="Missing" value={stats.data?.missing ?? 0} icon={ScanLine} />
+          <Stat
+            label="Playtime"
+            value={formatDuration(stats.data?.playtimeSeconds ?? 0)}
+            icon={Timer}
+            text
+          />
           <Stat
             label="Last scan"
             value={library?.lastScanAt ? formatDate(library.lastScanAt) : "Never"}
@@ -80,7 +87,7 @@ export function DashboardPage() {
               to="/settings"
               className="border-brass/35 bg-brass text-ink-950 hover:bg-brass-soft inline-flex h-11 items-center gap-2 rounded-full border px-5 text-sm font-medium transition"
             >
-              <ScanLine size={16} />
+              <Timer size={16} />
               Scan the library
             </Link>
           }
@@ -90,6 +97,21 @@ export function DashboardPage() {
       {!isEmpty ? (
         <>
           <ScanStatus />
+
+          {recentlyPlayed.data && recentlyPlayed.data.items.length > 0 ? (
+            <section>
+              <SectionHeading
+                eyebrow="Pick up where you left off"
+                title="Recently played"
+                action={
+                  <Link to="/library?sort=lastPlayed&order=desc" className="link-quiet text-sm">
+                    View library
+                  </Link>
+                }
+              />
+              <GameGrid games={recentlyPlayed.data.items} />
+            </section>
+          ) : null}
 
           <section>
             <SectionHeading

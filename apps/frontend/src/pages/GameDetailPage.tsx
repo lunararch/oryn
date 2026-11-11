@@ -12,13 +12,17 @@ import { Link, useParams } from "react-router-dom";
 import { ArtworkControls } from "../components/ArtworkControls";
 import { GamePoster } from "../components/GamePoster";
 import { MetadataDialog } from "../components/MetadataDialog";
+import { SessionDialog } from "../components/SessionDialog";
+import { SessionHistory } from "../components/SessionHistory";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
+import type { PlaySession } from "../lib/api/generated";
 import { artworkUrl } from "../lib/api/artwork";
 import { useGame, useSetFavorite } from "../lib/api/queries";
 import { formatDate } from "../lib/format";
+import { formatDuration } from "../lib/duration";
 
 const completionLabels: Record<string, string> = {
   unplayed: "Unplayed",
@@ -35,6 +39,8 @@ export function GameDetailPage() {
   const [editing, setEditing] = useState(false);
   const [coverFailed, setCoverFailed] = useState(false);
   const [bannerFailed, setBannerFailed] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<PlaySession | undefined>();
 
   if (game.isLoading) {
     return <DetailSkeleton />;
@@ -168,6 +174,18 @@ export function GameDetailPage() {
             </section>
           ) : null}
 
+          <SessionHistory
+            gameID={entry.id}
+            onCreate={() => {
+              setEditingSession(undefined);
+              setSessionOpen(true);
+            }}
+            onEdit={(session) => {
+              setEditingSession(session);
+              setSessionOpen(true);
+            }}
+          />
+
           <section className="surface px-6 py-6">
             <h2 className="font-display text-paper text-2xl">Play</h2>
             <div className="mt-4 flex items-start gap-4 rounded-2xl border border-white/8 bg-white/[0.025] p-4">
@@ -199,6 +217,16 @@ export function GameDetailPage() {
               <Detail label="Publisher" value={entry.publisher || "Not detected"} />
               <Detail label="Release" value={entry.releaseDate || "Not detected"} />
               <Detail label="Availability" value={isMissing ? "Missing" : "Available"} />
+              <Detail
+                label="Playtime"
+                value={
+                  entry.playtimeSeconds > 0 ? formatDuration(entry.playtimeSeconds) : "Not played"
+                }
+              />
+              <Detail
+                label="Last played"
+                value={entry.lastPlayedAt ? formatDate(entry.lastPlayedAt) : "Never"}
+              />
             </dl>
           </div>
           <ArtworkControls game={entry} />
@@ -206,6 +234,12 @@ export function GameDetailPage() {
       </div>
 
       <MetadataDialog game={entry} open={editing} onClose={() => setEditing(false)} />
+      <SessionDialog
+        gameID={entry.id}
+        open={sessionOpen}
+        session={editingSession}
+        onClose={() => setSessionOpen(false)}
+      />
     </div>
   );
 }

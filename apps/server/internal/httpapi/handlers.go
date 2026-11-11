@@ -15,6 +15,7 @@ import (
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
+	"github.com/lunararch/oryn/apps/server/internal/sessions"
 	"github.com/lunararch/oryn/apps/server/internal/store/db"
 )
 
@@ -124,10 +125,12 @@ func (o Options) getStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, statsDTO{
-		Total:     stats.Total,
-		Available: stats.Available,
-		Missing:   stats.Missing,
-		Favorites: stats.Favorites,
+		Total:           stats.Total,
+		Available:       stats.Available,
+		Missing:         stats.Missing,
+		Favorites:       stats.Favorites,
+		PlayedGames:     stats.PlayedGames,
+		PlaytimeSeconds: stats.PlaytimeSeconds,
 	})
 }
 
@@ -173,12 +176,21 @@ func (o Options) startScan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o Options) currentScan(w http.ResponseWriter, r *http.Request) {
-	if o.Scans == nil {
-		writeJSON(w, http.StatusOK, scanStateDTO{})
-		return
+	if o.Scans != nil {
+		state := o.Scans.Current()
+		if state.ID != "" {
+			writeJSON(w, http.StatusOK, toScanStateDTO(state))
+			return
+		}
 	}
-	state := o.Scans.Current()
-	writeJSON(w, http.StatusOK, toScanStateDTO(state))
+	if o.Queries != nil {
+		runs, err := o.Queries.ListScanRuns(r.Context(), 1)
+		if err == nil && len(runs) > 0 {
+			writeJSON(w, http.StatusOK, toScanStateFromRun(runs[0]))
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, scanStateDTO{})
 }
 
 func (o Options) cancelScan(w http.ResponseWriter, r *http.Request) {
@@ -346,6 +358,13 @@ func parseListParams(r *http.Request) (games.ListParams, error) {
 		}
 		params.Favorite = &value
 	}
+	if raw := query.Get("played"); raw != "" {
+		value, err := strconv.ParseBool(raw)
+		if err != nil {
+			return games.ListParams{}, fmt.Errorf("invalid played filter")
+		}
+		params.Played = &value
+	}
 	return params, nil
 }
 
@@ -379,6 +398,8 @@ func toGameDTO(game games.Game) gameDTO {
 		BannerArtworkID:  game.BannerArtworkID,
 		AddedAt:          formatUnix(game.AddedAt),
 		LastSeenAt:       formatUnix(game.LastSeenAt),
+		LastPlayedAt:     formatUnix(game.LastPlayedAt),
+		PlaytimeSeconds:  game.PlaytimeSeconds,
 	}
 }
 
@@ -408,8 +429,24 @@ func toScanStateDTO(state scanner.ScanState) scanStateDTO {
 	return dto
 }
 
-func toScanRunDTO(run db.ScanRun) scanRunDTO {
-	return scanRunDTO{
+func toScanStateFromRun(run db.ScanRun) scanStateDTO {
+	return scanStateDTO{
+		ID:         run.ID,
+		Running:    false,
+		StartedAt:  formatUnix(run.StartedAt),
+		FinishedAt: formatUnixNull(run.FinishedAt),
+		Status:     run.Status,
+		Discovered: int(run.DiscoveredCount),
+		Added:      int(run.AddedCount),
+		Updated:    int(run.UpdatedCount),
+		Unchanged:  int(run.UnchangedCount),
+		Missing:    int(run.MissingCount),
+		Errors:     int(run.ErrorCount),
+		Summary:    run.Summary,
+	}
+}
+
+func toScanRunDTO(run db.ScanRun) scanRunDTO {	return scanRunDTO{
 		ID:         run.ID,
 		Status:     run.Status,
 		StartedAt:  formatUnix(run.StartedAt),
@@ -440,6 +477,10 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 	case errors.Is(err, scanner.ErrScanInProgress):
 		writeError(w, http.StatusConflict, "scan_in_progress", "a scan is already running")
+	case errors.Is(err, sessions.ErrNotFound):
+		writeError(w, http.StatusNotFound, "not_found", "session not found")
+	case errors.Is(err, sessions.ErrValidation):
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 	default:
 		writeError(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}

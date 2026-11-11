@@ -47,6 +47,7 @@ type ListParams struct {
 	Sort         string
 	Order        string
 	Favorite     *bool
+	Played       *bool
 	Availability string
 	Completion   string
 }
@@ -73,6 +74,8 @@ type Game struct {
 	AddedAt          int64
 	LastSeenAt       int64
 	FirstSeenAt      int64
+	LastPlayedAt     int64
+	PlaytimeSeconds  int
 }
 
 // Page is a paged game list.
@@ -86,10 +89,12 @@ type Page struct {
 
 // Stats contains library totals.
 type Stats struct {
-	Total     int
-	Available int
-	Missing   int
-	Favorites int
+	Total           int
+	Available       int
+	Missing         int
+	Favorites       int
+	PlayedGames     int
+	PlaytimeSeconds int
 }
 
 // Service implements library queries and user metadata changes.
@@ -141,11 +146,13 @@ func (s *Service) List(ctx context.Context, params ListParams) (Page, error) {
 	}
 
 	orderBy, ok := map[string]string{
-		"title":    "COALESCE(o.title, g.detected_title) COLLATE NOCASE",
-		"added":    "g.first_seen_at",
-		"updated":  "g.updated_at",
-		"lastSeen": "g.last_seen_at",
-		"path":     "g.relative_path",
+		"title":      "COALESCE(o.title, g.detected_title) COLLATE NOCASE",
+		"added":      "g.first_seen_at",
+		"updated":    "g.updated_at",
+		"lastSeen":   "g.last_seen_at",
+		"lastPlayed": "(SELECT MAX(ps.started_at) FROM play_sessions ps WHERE ps.game_id = g.id)",
+		"playtime":   "(SELECT COALESCE(SUM(ps.duration_seconds), 0) FROM play_sessions ps WHERE ps.game_id = g.id AND ps.status IN ('completed', 'interrupted'))",
+		"path":       "g.relative_path",
 	}[params.Sort]
 	if !ok {
 		return Page{}, fmt.Errorf("%w: invalid sort field", ErrValidation)
@@ -176,6 +183,8 @@ SELECT
     EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite,
     COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'cover'), '') AS cover_artwork_id,
     COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS banner_artwork_id,
+    CAST(COALESCE((SELECT MAX(ps.started_at) FROM play_sessions ps WHERE ps.game_id = g.id), 0) AS INTEGER) AS last_played_at,
+    CAST(COALESCE((SELECT SUM(ps.duration_seconds) FROM play_sessions ps WHERE ps.game_id = g.id AND ps.status IN ('completed', 'interrupted')), 0) AS INTEGER) AS playtime_seconds,
     g.first_seen_at, g.last_seen_at
 FROM games g
 LEFT JOIN game_overrides o ON o.game_id = g.id
@@ -237,6 +246,13 @@ func buildWhere(params ListParams) (string, []any) {
 			clauses = append(clauses, `EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id)`)
 		} else {
 			clauses = append(clauses, `NOT EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id)`)
+		}
+	}
+	if params.Played != nil {
+		if *params.Played {
+			clauses = append(clauses, `EXISTS(SELECT 1 FROM play_sessions ps WHERE ps.game_id = g.id AND ps.status IN ('completed', 'interrupted'))`)
+		} else {
+			clauses = append(clauses, `NOT EXISTS(SELECT 1 FROM play_sessions ps WHERE ps.game_id = g.id AND ps.status IN ('completed', 'interrupted'))`)
 		}
 	}
 	if params.Availability != "" {
@@ -348,15 +364,22 @@ func (s *Service) SetFavorite(ctx context.Context, id string, favorite bool) err
 
 // GetStats returns library totals.
 func (s *Service) GetStats(ctx context.Context, libraryID string) (Stats, error) {
-	row, err := db.New(s.store.DB).GetStats(ctx, libraryID)
+	q := db.New(s.store.DB)
+	row, err := q.GetStats(ctx, libraryID)
 	if err != nil {
 		return Stats{}, fmt.Errorf("get stats: %w", err)
 	}
+	play, err := q.GetPlayStats(ctx, libraryID)
+	if err != nil {
+		return Stats{}, fmt.Errorf("get play stats: %w", err)
+	}
 	return Stats{
-		Total:     int(row.TotalGames),
-		Available: int(row.AvailableGames),
-		Missing:   int(row.MissingGames),
-		Favorites: int(row.FavoriteGames),
+		Total:           int(row.TotalGames),
+		Available:       int(row.AvailableGames),
+		Missing:         int(row.MissingGames),
+		Favorites:       int(row.FavoriteGames),
+		PlayedGames:     int(play.PlayedGames),
+		PlaytimeSeconds: int(play.TotalSeconds),
 	}, nil
 }
 
@@ -369,6 +392,7 @@ func scanGame(rows *sql.Rows) (Game, error) {
 		&game.Title, &game.Description, &game.Developer, &game.Publisher,
 		&game.ReleaseDate, &game.Version, &game.Availability, &game.CompletionStatus,
 		&rating, &game.Notes, &favorite, &game.CoverArtworkID, &game.BannerArtworkID,
+		&game.LastPlayedAt, &game.PlaytimeSeconds,
 		&game.FirstSeenAt, &game.LastSeenAt,
 	); err != nil {
 		return Game{}, fmt.Errorf("scan game: %w", err)
@@ -402,6 +426,8 @@ func gameFromRow(row db.GetGameRow) Game {
 		AddedAt:          row.FirstSeenAt,
 		LastSeenAt:       row.LastSeenAt,
 		FirstSeenAt:      row.FirstSeenAt,
+		LastPlayedAt:     row.LastPlayedAt,
+		PlaytimeSeconds:  int(row.PlaytimeSeconds),
 	}
 	if row.OverrideTitle.Valid {
 		game.Title = row.OverrideTitle.String

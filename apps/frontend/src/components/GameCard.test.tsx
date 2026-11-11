@@ -20,6 +20,7 @@ const game: Game = {
   notes: "",
   addedAt: "2025-01-02T03:04:05Z",
   lastSeenAt: "2025-01-02T03:04:05Z",
+  playtimeSeconds: 0,
 };
 
 describe("GameCard", () => {

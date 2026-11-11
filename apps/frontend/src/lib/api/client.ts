@@ -2,6 +2,8 @@ import type {
   Game,
   GamesResponse,
   LibrariesResponse,
+  PlaySession,
+  PlaySessionsResponse,
   ScanRun,
   ScanRunsResponse,
   ScanState,
@@ -55,6 +57,7 @@ export interface ListGamesParams {
   sort?: string;
   order?: string;
   favorite?: boolean;
+  played?: boolean;
   availability?: string;
   completion?: string;
 }
@@ -108,6 +111,43 @@ export function deleteArtwork(gameID: string, kind: "cover" | "banner"): Promise
 
 export function getLibraries(): Promise<LibrariesResponse> {
   return apiRequest<LibrariesResponse>("/libraries");
+}
+
+export interface SessionInput {
+  startedAt: string;
+  endedAt: string;
+  notes: string;
+}
+
+export function listSessions(
+  gameID: string,
+  page = 1,
+  pageSize = 20,
+): Promise<PlaySessionsResponse> {
+  const search = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  return apiRequest<PlaySessionsResponse>(
+    `/games/${encodeURIComponent(gameID)}/sessions?${search.toString()}`,
+  );
+}
+
+export function createSession(gameID: string, input: SessionInput): Promise<PlaySession> {
+  return apiRequest<PlaySession>(`/games/${encodeURIComponent(gameID)}/sessions`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateSession(sessionID: string, input: SessionInput): Promise<PlaySession> {
+  return apiRequest<PlaySession>(`/sessions/${encodeURIComponent(sessionID)}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteSession(sessionID: string): Promise<void> {
+  return apiRequest<void>(`/sessions/${encodeURIComponent(sessionID)}`, {
+    method: "DELETE",
+  });
 }
 
 export function startScan(allowMissing = false): Promise<ScanState> {

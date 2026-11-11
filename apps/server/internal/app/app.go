@@ -17,6 +17,7 @@ import (
 	"github.com/lunararch/oryn/apps/server/internal/httpapi"
 	"github.com/lunararch/oryn/apps/server/internal/library"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
+	"github.com/lunararch/oryn/apps/server/internal/sessions"
 	"github.com/lunararch/oryn/apps/server/internal/store"
 	"github.com/lunararch/oryn/apps/server/internal/store/db"
 )
@@ -71,6 +72,7 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		Timeout:  time.Second,
 	}
 	gamesService := games.NewService(s, now)
+	sessionsService := sessions.NewService(s, now)
 	scanService := scanner.NewService(scanner.ServiceOptions{
 		Store:    s,
 		MaxDepth: cfg.ScanMaxDepth,
@@ -104,11 +106,12 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 				return httpapi.LibraryNotConfigured
 			}
 		},
-		Library: libraryRecord,
-		Games:   gamesService,
-		Scans:   scanManager,
-		Queries: queries,
-		Artwork: artworkService,
+		Library:  libraryRecord,
+		Games:    gamesService,
+		Scans:    scanManager,
+		Queries:  queries,
+		Artwork:  artworkService,
+		Sessions: sessionsService,
 	})
 	var httpHandler http.Handler = handler
 	if cfg.WebDir != "" {

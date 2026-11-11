@@ -30,6 +30,8 @@ type Game struct {
 	BannerArtworkID  string `json:"bannerArtworkId,omitempty"`
 	AddedAt          string `json:"addedAt"`
 	LastSeenAt       string `json:"lastSeenAt"`
+	LastPlayedAt     string `json:"lastPlayedAt,omitempty"`
+	PlaytimeSeconds  int    `json:"playtimeSeconds"`
 }
 
 type GamesResponse struct {
@@ -52,10 +54,37 @@ type UpdateGameRequest struct {
 }
 
 type Stats struct {
-	Total     int `json:"total"`
-	Available int `json:"available"`
-	Missing   int `json:"missing"`
-	Favorites int `json:"favorites"`
+	Total           int `json:"total"`
+	Available       int `json:"available"`
+	Missing         int `json:"missing"`
+	Favorites       int `json:"favorites"`
+	PlayedGames     int `json:"playedGames"`
+	PlaytimeSeconds int `json:"playtimeSeconds"`
+}
+
+type PlaySession struct {
+	ID              string `json:"id"`
+	GameID          string `json:"gameId"`
+	StartedAt       string `json:"startedAt"`
+	EndedAt         string `json:"endedAt,omitempty"`
+	DurationSeconds int    `json:"durationSeconds"`
+	Status          string `json:"status"`
+	Source          string `json:"source"`
+	ExitCode        *int   `json:"exitCode,omitempty"`
+	Notes           string `json:"notes"`
+}
+
+type PlaySessionsResponse struct {
+	Items    []PlaySession `json:"items"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"pageSize"`
+	Total    int           `json:"total"`
+}
+
+type SessionRequest struct {
+	StartedAt string `json:"startedAt"`
+	EndedAt   string `json:"endedAt"`
+	Notes     string `json:"notes"`
 }
 
 type ScanState struct {
