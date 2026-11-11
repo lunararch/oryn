@@ -85,6 +85,29 @@ export interface SessionRequest {
   endedAt: string;
   notes: string;
 }
+export interface Collection {
+  id: string;
+  name: string;
+  description: string;
+  gameCount: number /* int */;
+}
+export interface CollectionsResponse {
+  items: Collection[];
+}
+export interface CollectionMembership {
+  id: string;
+  name: string;
+  description: string;
+  gameCount: number /* int */;
+  contains: boolean;
+}
+export interface CollectionMembershipsResponse {
+  items: CollectionMembership[];
+}
+export interface CollectionRequest {
+  name: string;
+  description: string;
+}
 export interface ScanState {
   id?: string;
   running: boolean;

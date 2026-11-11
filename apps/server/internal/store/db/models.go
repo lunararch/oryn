@@ -22,6 +22,20 @@ type Artwork struct {
 	UpdatedAt     int64
 }
 
+type Collection struct {
+	ID          string
+	Name        string
+	Description string
+	CreatedAt   int64
+	UpdatedAt   int64
+}
+
+type CollectionGame struct {
+	CollectionID string
+	GameID       string
+	AddedAt      int64
+}
+
 type Favorite struct {
 	GameID    string
 	CreatedAt int64

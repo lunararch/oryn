@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArtworkControls } from "../components/ArtworkControls";
+import { GameCollections } from "../components/GameCollections";
 import { GamePoster } from "../components/GamePoster";
 import { MetadataDialog } from "../components/MetadataDialog";
 import { SessionDialog } from "../components/SessionDialog";
@@ -173,6 +174,8 @@ export function GameDetailPage() {
               </p>
             </section>
           ) : null}
+
+          <GameCollections gameID={entry.id} />
 
           <SessionHistory
             gameID={entry.id}

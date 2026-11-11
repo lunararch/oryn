@@ -7,7 +7,7 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
-import { useGames } from "../lib/api/queries";
+import { useGames, useCollections } from "../lib/api/queries";
 import type { GameView } from "../components/GameCard";
 import { useDebouncedValue } from "../lib/useDebouncedValue";
 import { formatNumber } from "../lib/format";
@@ -39,6 +39,8 @@ export function LibraryPage() {
   const favorite = params.get("favorite") === "true";
   const completion = params.get("completion") ?? "";
   const availability = params.get("availability") ?? "";
+  const collectionID = params.get("collection") ?? "";
+  const collections = useCollections();
 
   const [search, setSearch] = useState(q);
   const debouncedSearch = useDebouncedValue(search, 280);
@@ -77,6 +79,7 @@ export function LibraryPage() {
     favorite: favorite || undefined,
     completion: completion || undefined,
     availability: availability || undefined,
+    collection: collectionID || undefined,
     sort,
     order,
     page,
@@ -112,14 +115,15 @@ export function LibraryPage() {
     setSearch("");
     setParams((previous) => {
       const next = new URLSearchParams(previous);
-      for (const key of ["q", "favorite", "completion", "availability", "page"]) next.delete(key);
+      for (const key of ["q", "favorite", "completion", "availability", "collection", "page"])
+        next.delete(key);
       return next;
     });
   }
 
   const total = games.data?.total ?? 0;
   const totalPages = games.data?.totalPages ?? 0;
-  const hasFilters = Boolean(q || favorite || completion || availability);
+  const hasFilters = Boolean(q || favorite || completion || availability || collectionID);
 
   return (
     <div className="space-y-7">
@@ -176,6 +180,30 @@ export function LibraryPage() {
                 </option>
               ))}
             </Select>
+            {collections.data && collections.data.items.length > 0 ? (
+              <Select
+                aria-label="Filter by collection"
+                value={collectionID}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setParams((previous) => {
+                    const next = new URLSearchParams(previous);
+                    if (value) next.set("collection", value);
+                    else next.delete("collection");
+                    next.delete("page");
+                    return next;
+                  });
+                }}
+                className="w-auto min-w-40"
+              >
+                <option value="">All collections</option>
+                {collections.data.items.map((collection) => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </option>
+                ))}
+              </Select>
+            ) : null}
             <div
               className="bg-ink-950/40 flex rounded-full border border-white/10 p-1"
               role="group"

@@ -1,10 +1,11 @@
-import { LayoutDashboard, LibraryBig, Settings2, Sparkles } from "lucide-react";
+import { LayoutDashboard, LibraryBig, Settings2, Sparkles, FolderHeart } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { ScanStatus } from "../components/ScanStatus";
 
 const navigation = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/library", label: "Library", icon: LibraryBig, end: false },
+  { to: "/collections", label: "Collections", icon: FolderHeart, end: false },
   { to: "/settings", label: "Settings", icon: Settings2, end: false },
 ];
 

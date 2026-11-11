@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
+	"github.com/lunararch/oryn/apps/server/internal/collections"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
 	"github.com/lunararch/oryn/apps/server/internal/sessions"
@@ -350,6 +351,7 @@ func parseListParams(r *http.Request) (games.ListParams, error) {
 		Order:        query.Get("order"),
 		Availability: query.Get("availability"),
 		Completion:   query.Get("completion"),
+		CollectionID: query.Get("collection"),
 	}
 	if raw := query.Get("favorite"); raw != "" {
 		value, err := strconv.ParseBool(raw)
@@ -446,7 +448,8 @@ func toScanStateFromRun(run db.ScanRun) scanStateDTO {
 	}
 }
 
-func toScanRunDTO(run db.ScanRun) scanRunDTO {	return scanRunDTO{
+func toScanRunDTO(run db.ScanRun) scanRunDTO {
+	return scanRunDTO{
 		ID:         run.ID,
 		Status:     run.Status,
 		StartedAt:  formatUnix(run.StartedAt),
@@ -481,6 +484,12 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "not_found", "session not found")
 	case errors.Is(err, sessions.ErrValidation):
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case errors.Is(err, collections.ErrNotFound):
+		writeError(w, http.StatusNotFound, "not_found", "collection not found")
+	case errors.Is(err, collections.ErrValidation):
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case errors.Is(err, collections.ErrConflict):
+		writeError(w, http.StatusConflict, "conflict", "collection name already exists")
 	default:
 		writeError(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}

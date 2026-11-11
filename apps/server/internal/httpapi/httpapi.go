@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
+	"github.com/lunararch/oryn/apps/server/internal/collections"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
 	"github.com/lunararch/oryn/apps/server/internal/sessions"
@@ -39,6 +40,7 @@ type Options struct {
 	Queries       *db.Queries
 	Artwork       *artwork.Service
 	Sessions      *sessions.Service
+	Collections   *collections.Service
 }
 
 // New builds the HTTP API router.
@@ -65,6 +67,15 @@ func New(opts Options) http.Handler {
 		r.Get("/games/{gameID}/sessions", opts.listSessions)
 		r.Patch("/sessions/{sessionID}", opts.updateSession)
 		r.Delete("/sessions/{sessionID}", opts.deleteSession)
+
+		r.Get("/collections", opts.listCollections)
+		r.Post("/collections", opts.createCollection)
+		r.Get("/collections/{collectionID}", opts.getCollection)
+		r.Patch("/collections/{collectionID}", opts.updateCollection)
+		r.Delete("/collections/{collectionID}", opts.deleteCollection)
+		r.Put("/collections/{collectionID}/games/{gameID}", opts.addGameToCollection)
+		r.Delete("/collections/{collectionID}/games/{gameID}", opts.removeGameFromCollection)
+		r.Get("/games/{gameID}/collections", opts.listCollectionsForGame)
 
 		r.Get("/stats", opts.getStats)
 		r.Get("/artwork/{artworkID}/{variant}", opts.getArtwork)

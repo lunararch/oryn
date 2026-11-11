@@ -10,13 +10,16 @@ import (
 )
 
 type Querier interface {
+	AddGameToCollection(ctx context.Context, arg AddGameToCollectionParams) error
 	AddScanError(ctx context.Context, arg AddScanErrorParams) error
 	CountAvailableGames(ctx context.Context, libraryID string) (int64, error)
 	CountGames(ctx context.Context, libraryID string) (int64, error)
 	CountPlaySessionsForGame(ctx context.Context, gameID string) (int64, error)
+	CreateCollection(ctx context.Context, arg CreateCollectionParams) error
 	CreateLibrary(ctx context.Context, arg CreateLibraryParams) error
 	CreateScanRun(ctx context.Context, arg CreateScanRunParams) error
 	DeleteArtwork(ctx context.Context, arg DeleteArtworkParams) error
+	DeleteCollection(ctx context.Context, id string) error
 	DeleteFavorite(ctx context.Context, gameID string) error
 	DeleteGameOverride(ctx context.Context, gameID string) error
 	DeletePlaySession(ctx context.Context, id string) error
@@ -24,6 +27,8 @@ type Querier interface {
 	FinishScanRun(ctx context.Context, arg FinishScanRunParams) error
 	GetArtwork(ctx context.Context, id string) (Artwork, error)
 	GetArtworkForGame(ctx context.Context, arg GetArtworkForGameParams) (Artwork, error)
+	GetCollection(ctx context.Context, id string) (GetCollectionRow, error)
+	GetCollectionName(ctx context.Context, id string) (string, error)
 	GetCurrentScanRun(ctx context.Context) (ScanRun, error)
 	GetGame(ctx context.Context, id string) (GetGameRow, error)
 	GetGameIDByFingerprint(ctx context.Context, arg GetGameIDByFingerprintParams) ([]string, error)
@@ -39,15 +44,19 @@ type Querier interface {
 	InsertGame(ctx context.Context, arg InsertGameParams) error
 	InsertPlaySession(ctx context.Context, arg InsertPlaySessionParams) error
 	ListArtworkForGame(ctx context.Context, gameID string) ([]Artwork, error)
+	ListCollections(ctx context.Context) ([]ListCollectionsRow, error)
+	ListCollectionsForGame(ctx context.Context, gameID string) ([]ListCollectionsForGameRow, error)
 	ListGamesForLibrary(ctx context.Context, libraryID string) ([]ListGamesForLibraryRow, error)
 	ListLibraries(ctx context.Context) ([]Library, error)
 	ListPlaySessionsForGame(ctx context.Context, arg ListPlaySessionsForGameParams) ([]PlaySession, error)
 	ListRecentPlaySessions(ctx context.Context, limit int64) ([]PlaySession, error)
 	ListScanErrors(ctx context.Context, arg ListScanErrorsParams) ([]ScanError, error)
 	ListScanRuns(ctx context.Context, limit int64) ([]ScanRun, error)
+	RemoveGameFromCollection(ctx context.Context, arg RemoveGameFromCollectionParams) error
 	SetFavorite(ctx context.Context, arg SetFavoriteParams) error
 	SetGameAvailability(ctx context.Context, arg SetGameAvailabilityParams) error
 	TouchLibraryScan(ctx context.Context, arg TouchLibraryScanParams) error
+	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) error
 	UpdateGameDetected(ctx context.Context, arg UpdateGameDetectedParams) error
 	UpdateGamePath(ctx context.Context, arg UpdateGamePathParams) error
 	UpdatePlaySession(ctx context.Context, arg UpdatePlaySessionParams) error

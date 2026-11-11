@@ -6,6 +6,8 @@ import { GameDetailPage } from "../pages/GameDetailPage";
 import { LibraryPage } from "../pages/LibraryPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { CollectionsPage } from "../pages/CollectionsPage";
+import { CollectionDetailPage } from "../pages/CollectionDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +28,8 @@ export function App() {
             <Route index element={<DashboardPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="games/:gameId" element={<GameDetailPage />} />
+            <Route path="collections" element={<CollectionsPage />} />
+            <Route path="collections/:collectionId" element={<CollectionDetailPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

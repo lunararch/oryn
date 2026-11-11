@@ -50,6 +50,7 @@ type ListParams struct {
 	Played       *bool
 	Availability string
 	Completion   string
+	CollectionID string
 }
 
 // Game is the resolved view of a game, with overrides applied.
@@ -262,6 +263,10 @@ func buildWhere(params ListParams) (string, []any) {
 	if params.Completion != "" {
 		clauses = append(clauses, "COALESCE(o.completion_status, 'unplayed') = ?")
 		args = append(args, params.Completion)
+	}
+	if params.CollectionID != "" {
+		clauses = append(clauses, `EXISTS(SELECT 1 FROM collection_games cg WHERE cg.game_id = g.id AND cg.collection_id = ?)`)
+		args = append(args, params.CollectionID)
 	}
 	return strings.Join(clauses, " AND "), args
 }

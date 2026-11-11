@@ -87,6 +87,34 @@ type SessionRequest struct {
 	Notes     string `json:"notes"`
 }
 
+type Collection struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	GameCount   int    `json:"gameCount"`
+}
+
+type CollectionsResponse struct {
+	Items []Collection `json:"items"`
+}
+
+type CollectionMembership struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	GameCount   int    `json:"gameCount"`
+	Contains    bool   `json:"contains"`
+}
+
+type CollectionMembershipsResponse struct {
+	Items []CollectionMembership `json:"items"`
+}
+
+type CollectionRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type ScanState struct {
 	ID         string `json:"id,omitempty"`
 	Running    bool   `json:"running"`

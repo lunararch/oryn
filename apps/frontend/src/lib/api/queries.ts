@@ -1,18 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UpdateGameRequest } from "./generated";
 import {
+  addGameToCollection,
+  createCollection,
   createSession,
   deleteArtwork,
+  deleteCollection,
   deleteSession,
+  getCollection,
   getCurrentScan,
   getGame,
   getLibraries,
   getStats,
+  listCollections,
+  listCollectionsForGame,
   listGames,
   listScans,
   listSessions,
+  removeGameFromCollection,
   setFavorite,
   startScan,
+  updateCollection,
   updateGame,
   updateSession,
   uploadArtwork,
@@ -24,6 +32,9 @@ export const queryKeys = {
   games: (params: ListGamesParams) => ["games", params] as const,
   game: (id: string) => ["game", id] as const,
   sessions: (gameID: string) => ["sessions", gameID] as const,
+  collections: ["collections"] as const,
+  collection: (id: string) => ["collection", id] as const,
+  gameCollections: (gameID: string) => ["game", gameID, "collections"] as const,
   stats: ["stats"] as const,
   libraries: ["libraries"] as const,
   currentScan: ["scan", "current"] as const,
@@ -106,6 +117,83 @@ export function useStartScan() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.currentScan });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scans });
+    },
+  });
+}
+
+export function useCollections() {
+  return useQuery({ queryKey: queryKeys.collections, queryFn: listCollections });
+}
+
+export function useCollection(id: string) {
+  return useQuery({
+    queryKey: queryKeys.collection(id),
+    queryFn: () => getCollection(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useGameCollections(gameID: string) {
+  return useQuery({
+    queryKey: queryKeys.gameCollections(gameID),
+    queryFn: () => listCollectionsForGame(gameID),
+    enabled: Boolean(gameID),
+  });
+}
+
+export function useCreateCollection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, description }: { name: string; description: string }) =>
+      createCollection(name, description),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useUpdateCollection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name, description }: { id: string; name: string; description: string }) =>
+      updateCollection(id, name, description),
+    onSuccess: (collection) => {
+      queryClient.setQueryData(queryKeys.collection(collection.id), collection);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useDeleteCollection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCollection(id),
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: queryKeys.collection(id) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+    },
+  });
+}
+
+export function useToggleCollectionMembership() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      collectionID,
+      gameID,
+      contains,
+    }: {
+      collectionID: string;
+      gameID: string;
+      contains: boolean;
+    }) =>
+      contains
+        ? removeGameFromCollection(collectionID, gameID)
+        : addGameToCollection(collectionID, gameID),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.gameCollections(variables.gameID) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.collections });
+      void queryClient.invalidateQueries({ queryKey: ["games"] });
     },
   });
 }

@@ -1,4 +1,7 @@
 import type {
+  Collection,
+  CollectionMembershipsResponse,
+  CollectionsResponse,
   Game,
   GamesResponse,
   LibrariesResponse,
@@ -60,6 +63,7 @@ export interface ListGamesParams {
   played?: boolean;
   availability?: string;
   completion?: string;
+  collection?: string;
 }
 
 export function listGames(params: ListGamesParams = {}): Promise<GamesResponse> {
@@ -150,6 +154,56 @@ export function deleteSession(sessionID: string): Promise<void> {
   });
 }
 
+export function listCollections(): Promise<CollectionsResponse> {
+  return apiRequest<CollectionsResponse>("/collections");
+}
+
+export function getCollection(id: string): Promise<Collection> {
+  return apiRequest<Collection>(`/collections/${encodeURIComponent(id)}`);
+}
+
+export function createCollection(name: string, description: string): Promise<Collection> {
+  return apiRequest<Collection>("/collections", {
+    method: "POST",
+    body: JSON.stringify({ name, description }),
+  });
+}
+
+export function updateCollection(
+  id: string,
+  name: string,
+  description: string,
+): Promise<Collection> {
+  return apiRequest<Collection>(`/collections/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name, description }),
+  });
+}
+
+export function deleteCollection(id: string): Promise<void> {
+  return apiRequest<void>(`/collections/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export function listCollectionsForGame(gameID: string): Promise<CollectionMembershipsResponse> {
+  return apiRequest<CollectionMembershipsResponse>(
+    `/games/${encodeURIComponent(gameID)}/collections`,
+  );
+}
+
+export function addGameToCollection(collectionID: string, gameID: string): Promise<void> {
+  return apiRequest<void>(
+    `/collections/${encodeURIComponent(collectionID)}/games/${encodeURIComponent(gameID)}`,
+    { method: "PUT" },
+  );
+}
+
+export function removeGameFromCollection(collectionID: string, gameID: string): Promise<void> {
+  return apiRequest<void>(
+    `/collections/${encodeURIComponent(collectionID)}/games/${encodeURIComponent(gameID)}`,
+    { method: "DELETE" },
+  );
+}
+
 export function startScan(allowMissing = false): Promise<ScanState> {
   return apiRequest<ScanState>("/scans", {
     method: "POST",
@@ -165,4 +219,4 @@ export function listScans(): Promise<ScanRunsResponse> {
   return apiRequest<ScanRunsResponse>("/scans");
 }
 
-export type { Game, ScanRun, ScanState, Stats };
+export type { Collection, Game, ScanRun, ScanState, Stats };
