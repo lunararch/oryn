@@ -228,6 +228,79 @@ func (o Options) getScan(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toScanRunDTO(run))
 }
 
+func (o Options) uploadArtwork(w http.ResponseWriter, r *http.Request) {
+	if o.Artwork == nil || o.Games == nil {
+		writeError(w, http.StatusServiceUnavailable, "library_not_configured", "artwork service is not configured")
+		return
+	}
+	gameID := chi.URLParam(r, "gameID")
+	if _, err := o.Games.Get(r.Context(), gameID); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 12<<20)
+	if err := r.ParseMultipartForm(12 << 20); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "invalid image upload")
+		return
+	}
+	if r.MultipartForm != nil {
+		defer r.MultipartForm.RemoveAll()
+	}
+	kind := r.FormValue("kind")
+	if kind == "" {
+		kind = "cover"
+	}
+	if kind != "cover" && kind != "banner" {
+		writeError(w, http.StatusBadRequest, "invalid_request", "invalid artwork kind")
+		return
+	}
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "image file is required")
+		return
+	}
+	defer file.Close()
+
+	if _, err := o.Artwork.StoreUpload(r.Context(), gameID, kind, file); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_image", "image could not be processed")
+		return
+	}
+	game, err := o.Games.Get(r.Context(), gameID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toGameDTO(game))
+}
+
+func (o Options) deleteArtwork(w http.ResponseWriter, r *http.Request) {
+	if o.Artwork == nil || o.Games == nil {
+		writeError(w, http.StatusServiceUnavailable, "library_not_configured", "artwork service is not configured")
+		return
+	}
+	kind := chi.URLParam(r, "kind")
+	if kind != "cover" && kind != "banner" {
+		writeError(w, http.StatusBadRequest, "invalid_request", "invalid artwork kind")
+		return
+	}
+	gameID := chi.URLParam(r, "gameID")
+	if _, err := o.Games.Get(r.Context(), gameID); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	if err := o.Artwork.Delete(r.Context(), gameID, kind); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	game, err := o.Games.Get(r.Context(), gameID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toGameDTO(game))
+}
+
 func (o Options) getArtwork(w http.ResponseWriter, r *http.Request) {
 	if o.Artwork == nil {
 		writeError(w, http.StatusNotFound, "not_found", "artwork not found")

@@ -32,10 +32,8 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
     <article className={`group relative ${view === "list" ? "game-card-list" : "game-card-grid"}`}>
       <Link
         to={`/games/${game.id}`}
-        className={`block rounded-[1.35rem] outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-4 focus-visible:ring-offset-ink-950 ${
-          view === "list"
-            ? "flex items-stretch gap-4 p-3"
-            : "flex h-full flex-col overflow-hidden"
+        className={`focus-visible:ring-brass focus-visible:ring-offset-ink-950 block rounded-[1.35rem] outline-none focus-visible:ring-2 focus-visible:ring-offset-4 ${
+          view === "list" ? "flex items-stretch gap-4 p-3" : "flex h-full flex-col overflow-hidden"
         }`}
       >
         <div
@@ -56,7 +54,7 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
             />
           ) : null}
           {isMissing ? (
-            <span className="absolute left-3 top-3 rounded-full bg-ink-950/85 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-rust-soft backdrop-blur">
+            <span className="bg-ink-950/85 text-rust-soft absolute top-3 left-3 rounded-full px-2.5 py-1 text-[0.65rem] font-semibold tracking-[0.16em] uppercase backdrop-blur">
               Missing
             </span>
           ) : null}
@@ -66,16 +64,16 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
           className={
             view === "list"
               ? "flex min-w-0 flex-1 flex-col justify-center py-1 pr-10"
-              : "flex flex-1 flex-col gap-2 px-4 pb-4 pt-4"
+              : "flex flex-1 flex-col gap-2 px-4 pt-4 pb-4"
           }
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-[1.15rem] leading-tight text-paper transition-colors group-hover:text-brass-soft">
+              <h3 className="font-display text-paper group-hover:text-brass-soft text-[1.15rem] leading-tight transition-colors">
                 {game.title}
               </h3>
               {game.developer ? (
-                <p className="mt-1 truncate text-sm text-paper-muted">{game.developer}</p>
+                <p className="text-paper-muted mt-1 truncate text-sm">{game.developer}</p>
               ) : null}
             </div>
           </div>
@@ -94,7 +92,7 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
         aria-pressed={game.favorite}
         disabled={favoritePending}
         onClick={() => onToggleFavorite(game, !game.favorite)}
-        className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-ink-950/65 backdrop-blur transition hover:border-brass/50 hover:bg-ink-900 disabled:opacity-60 ${
+        className={`bg-ink-950/65 hover:border-brass/50 hover:bg-ink-900 absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full border border-white/10 backdrop-blur transition disabled:opacity-60 ${
           game.favorite ? "text-brass" : "text-paper-muted hover:text-paper"
         }`}
       >

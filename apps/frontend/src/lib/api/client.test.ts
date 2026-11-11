@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiRequest, listGames } from "./client";
+import { apiRequest, listGames, uploadArtwork } from "./client";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -72,5 +72,26 @@ describe("listGames", () => {
     expect(url).toContain("sort=title");
     expect(url).toContain("order=asc");
     expect(url).toContain("completion=completed");
+  });
+});
+
+describe("uploadArtwork", () => {
+  it("sends multipart form data without a JSON content type", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: "game-1", title: "Game" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const file = new File(["image"], "cover.png", { type: "image/png" });
+    await uploadArtwork("game-1", "cover", file);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeInstanceOf(FormData);
+    const headers = new Headers(init.headers);
+    expect(headers.get("Content-Type")).toBeNull();
   });
 });

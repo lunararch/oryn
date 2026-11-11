@@ -34,15 +34,15 @@ export function Dialog({ open, onClose, title, description, children }: DialogPr
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
-      className="m-auto w-[min(92vw,44rem)] max-h-[88vh] overflow-y-auto rounded-[1.6rem] border border-white/12 bg-ink-900 p-0 text-paper shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)] backdrop:bg-ink-950/80 backdrop:backdrop-blur-sm"
+      className="bg-ink-900 text-paper backdrop:bg-ink-950/80 m-auto max-h-[88vh] w-[min(92vw,44rem)] overflow-y-auto rounded-[1.6rem] border border-white/12 p-0 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.95)] backdrop:backdrop-blur-sm"
     >
-      <div className="sticky top-0 z-10 flex items-start justify-between gap-6 border-b border-white/8 bg-ink-900/95 px-6 py-5 backdrop-blur">
+      <div className="bg-ink-900/95 sticky top-0 z-10 flex items-start justify-between gap-6 border-b border-white/8 px-6 py-5 backdrop-blur">
         <div>
-          <h2 id={titleId} className="font-display text-2xl text-paper">
+          <h2 id={titleId} className="font-display text-paper text-2xl">
             {title}
           </h2>
           {description ? (
-            <p id={descriptionId} className="mt-1 text-sm text-paper-muted">
+            <p id={descriptionId} className="text-paper-muted mt-1 text-sm">
               {description}
             </p>
           ) : null}
@@ -51,7 +51,7 @@ export function Dialog({ open, onClose, title, description, children }: DialogPr
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-paper-muted transition hover:bg-white/5 hover:text-paper"
+          className="text-paper-muted hover:text-paper grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 transition hover:bg-white/5"
         >
           <X size={17} />
         </button>

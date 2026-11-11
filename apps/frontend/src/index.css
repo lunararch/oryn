@@ -65,40 +65,40 @@
 
 @layer components {
   .surface {
-    @apply rounded-[1.4rem] border border-white/8 bg-ink-900/78 shadow-[0_24px_70px_-42px_rgba(0,0,0,0.9)] backdrop-blur-sm;
+    @apply bg-ink-900/78 rounded-[1.4rem] border border-white/8 shadow-[0_24px_70px_-42px_rgba(0,0,0,0.9)] backdrop-blur-sm;
   }
 
   .surface-raised {
-    @apply rounded-[1.4rem] border border-white/10 bg-ink-850/90 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.95)];
+    @apply bg-ink-850/90 rounded-[1.4rem] border border-white/10 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.95)];
   }
 
   .field {
-    @apply w-full rounded-xl border border-white/10 bg-ink-950/55 px-3.5 py-2.5 text-sm text-paper placeholder:text-paper-faint transition focus:border-brass/50 focus:ring-2 focus:ring-brass/15;
+    @apply bg-ink-950/55 text-paper placeholder:text-paper-faint focus:border-brass/50 focus:ring-brass/15 w-full rounded-xl border border-white/10 px-3.5 py-2.5 text-sm transition focus:ring-2;
   }
 
   .game-card-grid {
-    @apply overflow-hidden rounded-[1.35rem] border border-white/8 bg-ink-900/70 transition duration-300 hover:-translate-y-1 hover:border-brass/25 hover:bg-ink-850/90 hover:shadow-[0_30px_70px_-35px_rgba(0,0,0,0.9)];
+    @apply bg-ink-900/70 hover:border-brass/25 hover:bg-ink-850/90 overflow-hidden rounded-[1.35rem] border border-white/8 transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_70px_-35px_rgba(0,0,0,0.9)];
   }
 
   .game-card-list {
-    @apply rounded-[1.35rem] border border-white/8 bg-ink-900/60 transition duration-200 hover:border-brass/20 hover:bg-ink-850/85;
+    @apply bg-ink-900/60 hover:border-brass/20 hover:bg-ink-850/85 rounded-[1.35rem] border border-white/8 transition duration-200;
   }
 
   .poster-glow {
-    @apply pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full blur-3xl;
+    @apply pointer-events-none absolute -top-16 -right-12 h-48 w-48 rounded-full blur-3xl;
     background: radial-gradient(circle, rgb(242 236 223 / 0.18), transparent 68%);
   }
 
   .eyebrow {
-    @apply text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brass/85;
+    @apply text-brass/85 text-[0.68rem] font-semibold tracking-[0.24em] uppercase;
   }
 
   .page-title {
-    @apply font-display text-4xl leading-[1.05] tracking-[-0.02em] text-paper sm:text-5xl;
+    @apply font-display text-paper text-4xl leading-[1.05] tracking-[-0.02em] sm:text-5xl;
   }
 
   .link-quiet {
-    @apply text-paper-muted underline decoration-white/15 underline-offset-4 transition hover:text-paper hover:decoration-brass/50;
+    @apply text-paper-muted hover:text-paper hover:decoration-brass/50 underline decoration-white/15 underline-offset-4 transition;
   }
 }
 

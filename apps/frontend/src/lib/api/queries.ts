@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UpdateGameRequest } from "./generated";
 import {
+  deleteArtwork,
   getCurrentScan,
   getGame,
   getLibraries,
@@ -10,6 +11,7 @@ import {
   setFavorite,
   startScan,
   updateGame,
+  uploadArtwork,
   type ListGamesParams,
 } from "./client";
 
@@ -71,8 +73,7 @@ export function useSetFavorite() {
   const queryClient = useQueryClient();
   const invalidateLibrary = useInvalidateLibrary();
   return useMutation({
-    mutationFn: ({ id, favorite }: { id: string; favorite: boolean }) =>
-      setFavorite(id, favorite),
+    mutationFn: ({ id, favorite }: { id: string; favorite: boolean }) => setFavorite(id, favorite),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.game(variables.id) });
       invalidateLibrary();
@@ -99,6 +100,39 @@ export function useStartScan() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.currentScan });
       void queryClient.invalidateQueries({ queryKey: queryKeys.scans });
+    },
+  });
+}
+
+export function useUploadArtwork() {
+  const queryClient = useQueryClient();
+  const invalidateLibrary = useInvalidateLibrary();
+  return useMutation({
+    mutationFn: ({
+      gameID,
+      kind,
+      file,
+    }: {
+      gameID: string;
+      kind: "cover" | "banner";
+      file: File;
+    }) => uploadArtwork(gameID, kind, file),
+    onSuccess: (game) => {
+      queryClient.setQueryData(queryKeys.game(game.id), game);
+      invalidateLibrary();
+    },
+  });
+}
+
+export function useDeleteArtwork() {
+  const queryClient = useQueryClient();
+  const invalidateLibrary = useInvalidateLibrary();
+  return useMutation({
+    mutationFn: ({ gameID, kind }: { gameID: string; kind: "cover" | "banner" }) =>
+      deleteArtwork(gameID, kind),
+    onSuccess: (game) => {
+      queryClient.setQueryData(queryKeys.game(game.id), game);
+      invalidateLibrary();
     },
   });
 }

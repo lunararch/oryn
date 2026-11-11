@@ -57,6 +57,8 @@ func New(opts Options) http.Handler {
 		r.Patch("/games/{gameID}", opts.updateGame)
 		r.Put("/games/{gameID}/favorite", opts.setFavorite)
 		r.Delete("/games/{gameID}/favorite", opts.removeFavorite)
+		r.Post("/games/{gameID}/artwork", opts.uploadArtwork)
+		r.Delete("/games/{gameID}/artwork/{kind}", opts.deleteArtwork)
 
 		r.Get("/stats", opts.getStats)
 		r.Get("/artwork/{artworkID}/{variant}", opts.getArtwork)

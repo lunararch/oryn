@@ -125,12 +125,12 @@ export function LibraryPage() {
         <div>
           <p className="eyebrow">The shelf</p>
           <h1 className="page-title mt-2">Library</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-paper-muted">
+          <p className="text-paper-muted mt-3 max-w-xl text-sm leading-relaxed">
             Every game Oryn has found, with the details you choose to keep.
           </p>
         </div>
-        <div className="flex items-baseline gap-2 text-sm text-paper-muted">
-          <span className="font-display text-3xl text-paper">{formatNumber(total)}</span>
+        <div className="text-paper-muted flex items-baseline gap-2 text-sm">
+          <span className="font-display text-paper text-3xl">{formatNumber(total)}</span>
           {total === 1 ? "game" : "games"}
         </div>
       </div>
@@ -141,7 +141,7 @@ export function LibraryPage() {
             <span className="sr-only">Search games</span>
             <Search
               size={17}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-paper-faint"
+              className="text-paper-faint pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
             />
             <Input
               value={search}
@@ -154,7 +154,7 @@ export function LibraryPage() {
                 type="button"
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-paper-faint transition hover:text-paper"
+                className="text-paper-faint hover:text-paper absolute top-1/2 right-3 -translate-y-1/2 transition"
               >
                 <X size={15} />
               </button>
@@ -175,7 +175,7 @@ export function LibraryPage() {
               ))}
             </Select>
             <div
-              className="flex rounded-full border border-white/10 bg-ink-950/40 p-1"
+              className="bg-ink-950/40 flex rounded-full border border-white/10 p-1"
               role="group"
               aria-label="View mode"
             >
@@ -185,7 +185,9 @@ export function LibraryPage() {
                 aria-pressed={view === "grid"}
                 onClick={() => setView("grid")}
                 className={`grid h-8 w-9 place-items-center rounded-full transition ${
-                  view === "grid" ? "bg-brass/15 text-brass-soft" : "text-paper-muted hover:text-paper"
+                  view === "grid"
+                    ? "bg-brass/15 text-brass-soft"
+                    : "text-paper-muted hover:text-paper"
                 }`}
               >
                 <LayoutGrid size={15} />
@@ -196,7 +198,9 @@ export function LibraryPage() {
                 aria-pressed={view === "list"}
                 onClick={() => setView("list")}
                 className={`grid h-8 w-9 place-items-center rounded-full transition ${
-                  view === "list" ? "bg-brass/15 text-brass-soft" : "text-paper-muted hover:text-paper"
+                  view === "list"
+                    ? "bg-brass/15 text-brass-soft"
+                    : "text-paper-muted hover:text-paper"
                 }`}
               >
                 <List size={15} />
@@ -215,7 +219,7 @@ export function LibraryPage() {
               className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                 activeFilter === filter.key
                   ? "border-brass/35 bg-brass/12 text-brass-soft"
-                  : "border-white/9 text-paper-muted hover:border-white/16 hover:text-paper"
+                  : "text-paper-muted hover:text-paper border-white/9 hover:border-white/16"
               }`}
             >
               {filter.label}
@@ -225,7 +229,7 @@ export function LibraryPage() {
             <button
               type="button"
               onClick={clearFilters}
-              className="ml-auto flex items-center gap-1.5 text-xs text-paper-faint transition hover:text-paper"
+              className="text-paper-faint hover:text-paper ml-auto flex items-center gap-1.5 text-xs transition"
             >
               <X size={13} />
               Clear filters
@@ -237,8 +241,8 @@ export function LibraryPage() {
       {games.isError ? (
         <div className="surface flex flex-wrap items-center justify-between gap-4 px-5 py-4">
           <div>
-            <p className="font-medium text-rust-soft">Could not load the library</p>
-            <p className="mt-1 text-sm text-paper-muted">{games.error.message}</p>
+            <p className="text-rust-soft font-medium">Could not load the library</p>
+            <p className="text-paper-muted mt-1 text-sm">{games.error.message}</p>
           </div>
           <Button onClick={() => void games.refetch()}>Try again</Button>
         </div>
@@ -284,7 +288,7 @@ export function LibraryPage() {
               >
                 Previous
               </Button>
-              <span className="text-sm text-paper-muted">
+              <span className="text-paper-muted text-sm">
                 Page {page} of {totalPages}
               </span>
               <Button

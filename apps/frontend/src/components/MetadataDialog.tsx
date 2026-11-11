@@ -140,7 +140,7 @@ function MetadataForm({ game, onClose }: { game: Game; onClose: () => void }) {
 
       {update.isError ? (
         <p
-          className="rounded-xl border border-rust/25 bg-rust/10 px-3.5 py-2.5 text-sm text-rust-soft"
+          className="border-rust/25 bg-rust/10 text-rust-soft rounded-xl border px-3.5 py-2.5 text-sm"
           role="alert"
         >
           {update.error.message}
@@ -162,7 +162,7 @@ function MetadataForm({ game, onClose }: { game: Game; onClose: () => void }) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.13em] text-paper-muted">
+      <span className="text-paper-muted mb-1.5 block text-xs font-medium tracking-[0.13em] uppercase">
         {label}
       </span>
       {children}

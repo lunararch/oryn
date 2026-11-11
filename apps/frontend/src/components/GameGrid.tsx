@@ -32,7 +32,13 @@ export function GameGrid({ games, view = "grid" }: GameGridProps) {
   );
 }
 
-export function GameGridSkeleton({ count = 8, view = "grid" }: { count?: number; view?: GameView }) {
+export function GameGridSkeleton({
+  count = 8,
+  view = "grid",
+}: {
+  count?: number;
+  view?: GameView;
+}) {
   if (view === "list") {
     return (
       <div className="flex flex-col gap-3">

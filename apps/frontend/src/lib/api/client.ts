@@ -25,7 +25,7 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) {
+  if (typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -88,6 +88,22 @@ export function setFavorite(id: string, favorite: boolean): Promise<void> {
 
 export function getStats(): Promise<Stats> {
   return apiRequest<Stats>("/stats");
+}
+
+export function uploadArtwork(gameID: string, kind: "cover" | "banner", file: File): Promise<Game> {
+  const body = new FormData();
+  body.append("kind", kind);
+  body.append("file", file);
+  return apiRequest<Game>(`/games/${encodeURIComponent(gameID)}/artwork`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function deleteArtwork(gameID: string, kind: "cover" | "banner"): Promise<Game> {
+  return apiRequest<Game>(`/games/${encodeURIComponent(gameID)}/artwork/${kind}`, {
+    method: "DELETE",
+  });
 }
 
 export function getLibraries(): Promise<LibrariesResponse> {

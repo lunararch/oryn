@@ -35,15 +35,11 @@ export function ScanStatus({ compact = false }: ScanStatusProps) {
       <div className="flex items-center gap-2.5">
         <span
           className={`h-2 w-2 rounded-full ${
-            scan.isError
-              ? "bg-rust"
-              : running
-                ? "animate-pulse bg-brass"
-                : "bg-emerald-400/80"
+            scan.isError ? "bg-rust" : running ? "bg-brass animate-pulse" : "bg-emerald-400/80"
           }`}
           aria-hidden="true"
         />
-        <span className="hidden text-xs text-paper-muted sm:inline">
+        <span className="text-paper-muted hidden text-xs sm:inline">
           {scan.isError ? "Server offline" : running ? "Scanning library" : "Library ready"}
         </span>
         <Button
@@ -75,7 +71,7 @@ export function ScanStatus({ compact = false }: ScanStatusProps) {
             <RefreshCw size={16} className={running ? "animate-spin" : ""} />
           </span>
           <div>
-            <p className="text-sm font-medium text-paper">
+            <p className="text-paper text-sm font-medium">
               {scan.isError
                 ? "Server unavailable"
                 : running
@@ -84,7 +80,7 @@ export function ScanStatus({ compact = false }: ScanStatusProps) {
                     ? scanSummary(status)
                     : "No scan yet"}
             </p>
-            <p className="mt-0.5 text-xs text-paper-muted">
+            <p className="text-paper-muted mt-0.5 text-xs">
               {scan.isError
                 ? "Check that the Oryn server is running."
                 : running
@@ -105,7 +101,7 @@ export function ScanStatus({ compact = false }: ScanStatusProps) {
         </Button>
       </div>
       {startScan.isError ? (
-        <p className="mt-3 text-xs text-rust-soft" role="alert">
+        <p className="text-rust-soft mt-3 text-xs" role="alert">
           {startScan.error.message}
         </p>
       ) : null}

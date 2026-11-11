@@ -12,6 +12,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	_ "image/png"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -209,6 +210,58 @@ func (s *Service) ProcessFile(ctx context.Context, gameID, kind, sourcePath, sou
 		return db.Artwork{}, fmt.Errorf("read saved artwork: %w", err)
 	}
 	return row, nil
+}
+
+// StoreUpload validates an uploaded image and stores it as user-selected artwork.
+func (s *Service) StoreUpload(ctx context.Context, gameID, kind string, src io.Reader) (db.Artwork, error) {
+	if kind != "cover" && kind != "banner" {
+		return db.Artwork{}, fmt.Errorf("invalid artwork kind")
+	}
+	if err := os.MkdirAll(s.cacheDir, 0o750); err != nil {
+		return db.Artwork{}, fmt.Errorf("create artwork cache: %w", err)
+	}
+	temp, err := os.CreateTemp(s.cacheDir, ".upload-*")
+	if err != nil {
+		return db.Artwork{}, fmt.Errorf("create upload file: %w", err)
+	}
+	tempName := temp.Name()
+	defer os.Remove(tempName)
+
+	written, err := io.Copy(temp, io.LimitReader(src, s.maxFileBytes+1))
+	if err != nil {
+		_ = temp.Close()
+		return db.Artwork{}, fmt.Errorf("read upload: %w", err)
+	}
+	if err := temp.Close(); err != nil {
+		return db.Artwork{}, fmt.Errorf("close upload: %w", err)
+	}
+	if written == 0 {
+		return db.Artwork{}, fmt.Errorf("upload is empty")
+	}
+	if written > s.maxFileBytes {
+		return db.Artwork{}, fmt.Errorf("upload exceeds the size limit")
+	}
+	return s.ProcessFile(ctx, gameID, kind, tempName, "", "upload")
+}
+
+// Delete removes artwork for a game and kind. It is idempotent.
+func (s *Service) Delete(ctx context.Context, gameID, kind string) error {
+	if kind != "cover" && kind != "banner" {
+		return fmt.Errorf("invalid artwork kind")
+	}
+	row, err := db.New(s.store.DB).GetArtworkForGame(ctx, db.GetArtworkForGameParams{GameID: gameID, Kind: kind})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("get artwork: %w", err)
+	}
+	if err := s.deleteArtwork(ctx, gameID, kind); err != nil {
+		return err
+	}
+	s.removeVariant(row.CacheKey, "card")
+	s.removeVariant(row.CacheKey, "detail")
+	return nil
 }
 
 // SyncLibrary discovers artwork for every available game in the library.

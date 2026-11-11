@@ -37,13 +37,13 @@ export function GamePoster({ title, className = "", showText = true }: GamePoste
       }}
     >
       <div className="poster-glow" />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink-950/65 to-transparent" />
+      <div className="from-ink-950/65 absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent" />
       {showText ? (
         <div className="relative flex h-full flex-col justify-between p-4">
-          <span className="text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-paper/45">
+          <span className="text-paper/45 text-[0.62rem] font-semibold tracking-[0.28em] uppercase">
             Oryn
           </span>
-          <span className="font-display text-4xl leading-none text-paper/90 drop-shadow-lg sm:text-5xl">
+          <span className="font-display text-paper/90 text-4xl leading-none drop-shadow-lg sm:text-5xl">
             {initials(title)}
           </span>
         </div>
