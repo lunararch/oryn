@@ -25,9 +25,10 @@ type Manager struct {
 	logger  *slog.Logger
 	now     func() time.Time
 
-	mu     sync.Mutex
-	state  ScanState
-	cancel context.CancelFunc
+	mu         sync.Mutex
+	state      ScanState
+	cancel     context.CancelFunc
+	onComplete func(context.Context, db.Library)
 }
 
 // NewManager builds a scan manager.
@@ -57,6 +58,11 @@ func (m *Manager) Start(lib db.Library, opts ScanOptions) (string, error) {
 
 	go func() {
 		result, err := m.service.Scan(ctx, lib, opts)
+		if err == nil && (result.Status == ScanCompleted || result.Status == ScanPartial) && m.onComplete != nil {
+			hookCtx, hookCancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			m.onComplete(hookCtx, lib)
+			hookCancel()
+		}
 		m.mu.Lock()
 		defer m.mu.Unlock()
 		m.state.Running = false
@@ -70,6 +76,13 @@ func (m *Manager) Start(lib db.Library, opts ScanOptions) (string, error) {
 	}()
 
 	return id, nil
+}
+
+// SetOnComplete registers a post-scan hook, such as artwork synchronisation.
+func (m *Manager) SetOnComplete(fn func(context.Context, db.Library)) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.onComplete = fn
 }
 
 // Current returns the current or most recent scan state.

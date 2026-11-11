@@ -55,7 +55,9 @@ SELECT g.*,
        o.rating AS override_rating,
        o.notes AS override_notes,
        o.completion_status AS override_completion_status,
-       EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite
+       EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite,
+       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'cover'), '') AS TEXT) AS cover_artwork_id,
+       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS TEXT) AS banner_artwork_id
 FROM games g
 LEFT JOIN game_overrides o ON o.game_id = g.id
 WHERE g.id = ?;
@@ -110,3 +112,29 @@ SELECT
     (SELECT COUNT(*) FROM favorites) AS favorite_games
 FROM games
 WHERE library_id = ?;
+
+-- name: UpsertArtwork :exec
+INSERT INTO artwork (
+    id, game_id, kind, origin, source_rel_path, cache_key,
+    mime_type, width, height, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(game_id, kind) DO UPDATE SET
+    origin = excluded.origin,
+    source_rel_path = excluded.source_rel_path,
+    cache_key = excluded.cache_key,
+    mime_type = excluded.mime_type,
+    width = excluded.width,
+    height = excluded.height,
+    updated_at = excluded.updated_at;
+
+-- name: GetArtwork :one
+SELECT * FROM artwork WHERE id = ?;
+
+-- name: GetArtworkForGame :one
+SELECT * FROM artwork WHERE game_id = ? AND kind = ?;
+
+-- name: ListArtworkForGame :many
+SELECT * FROM artwork WHERE game_id = ?;
+
+-- name: DeleteArtwork :exec
+DELETE FROM artwork WHERE game_id = ? AND kind = ?;

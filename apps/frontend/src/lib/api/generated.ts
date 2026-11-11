@@ -31,6 +31,8 @@ export interface Game {
   rating?: number /* int */;
   notes: string;
   favorite: boolean;
+  coverArtworkId?: string;
+  bannerArtworkId?: string;
   addedAt: string;
   lastSeenAt: string;
 }

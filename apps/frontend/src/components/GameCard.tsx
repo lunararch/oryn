@@ -1,6 +1,8 @@
 import { Heart } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Game } from "../lib/api/generated";
+import { artworkUrl } from "../lib/api/artwork";
 import { Badge } from "./ui/Badge";
 import { GamePoster } from "./GamePoster";
 
@@ -23,6 +25,8 @@ const completionLabels: Record<string, string> = {
 export function GameCard({ game, view, onToggleFavorite, favoritePending }: GameCardProps) {
   const isMissing = game.availability === "missing";
   const completion = completionLabels[game.completionStatus];
+  const [coverFailed, setCoverFailed] = useState(false);
+  const cover = artworkUrl(game.coverArtworkId, "card");
 
   return (
     <article className={`group relative ${view === "list" ? "game-card-list" : "game-card-grid"}`}>
@@ -42,6 +46,15 @@ export function GameCard({ game, view, onToggleFavorite, favoritePending }: Game
           }
         >
           <GamePoster title={game.title} className="h-full w-full" />
+          {cover && !coverFailed ? (
+            <img
+              src={cover}
+              alt=""
+              loading="lazy"
+              onError={() => setCoverFailed(true)}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : null}
           {isMissing ? (
             <span className="absolute left-3 top-3 rounded-full bg-ink-950/85 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-rust-soft backdrop-blur">
               Missing

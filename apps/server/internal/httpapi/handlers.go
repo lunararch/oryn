@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/lunararch/oryn/apps/server/internal/artwork"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
 	"github.com/lunararch/oryn/apps/server/internal/store/db"
@@ -227,6 +228,25 @@ func (o Options) getScan(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toScanRunDTO(run))
 }
 
+func (o Options) getArtwork(w http.ResponseWriter, r *http.Request) {
+	if o.Artwork == nil {
+		writeError(w, http.StatusNotFound, "not_found", "artwork not found")
+		return
+	}
+	path, contentType, err := o.Artwork.VariantPath(r.Context(), chi.URLParam(r, "artworkID"), chi.URLParam(r, "variant"))
+	if errors.Is(err, artwork.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "not_found", "artwork not found")
+		return
+	}
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	http.ServeFile(w, r, path)
+}
+
 func parseListParams(r *http.Request) (games.ListParams, error) {
 	query := r.URL.Query()
 	page, err := intQuery(query.Get("page"), 1)
@@ -282,6 +302,8 @@ func toGameDTO(game games.Game) gameDTO {
 		Rating:           game.Rating,
 		Notes:            game.Notes,
 		Favorite:         game.Favorite,
+		CoverArtworkID:   game.CoverArtworkID,
+		BannerArtworkID:  game.BannerArtworkID,
 		AddedAt:          formatUnix(game.AddedAt),
 		LastSeenAt:       formatUnix(game.LastSeenAt),
 	}

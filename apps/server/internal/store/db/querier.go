@@ -15,10 +15,13 @@ type Querier interface {
 	CountGames(ctx context.Context, libraryID string) (int64, error)
 	CreateLibrary(ctx context.Context, arg CreateLibraryParams) error
 	CreateScanRun(ctx context.Context, arg CreateScanRunParams) error
+	DeleteArtwork(ctx context.Context, arg DeleteArtworkParams) error
 	DeleteFavorite(ctx context.Context, gameID string) error
 	DeleteGameOverride(ctx context.Context, gameID string) error
 	FailStaleScanRuns(ctx context.Context, finishedAt sql.NullInt64) error
 	FinishScanRun(ctx context.Context, arg FinishScanRunParams) error
+	GetArtwork(ctx context.Context, id string) (Artwork, error)
+	GetArtworkForGame(ctx context.Context, arg GetArtworkForGameParams) (Artwork, error)
 	GetCurrentScanRun(ctx context.Context) (ScanRun, error)
 	GetGame(ctx context.Context, id string) (GetGameRow, error)
 	GetGameIDByFingerprint(ctx context.Context, arg GetGameIDByFingerprintParams) ([]string, error)
@@ -29,6 +32,7 @@ type Querier interface {
 	GetScanRun(ctx context.Context, id string) (ScanRun, error)
 	GetStats(ctx context.Context, libraryID string) (GetStatsRow, error)
 	InsertGame(ctx context.Context, arg InsertGameParams) error
+	ListArtworkForGame(ctx context.Context, gameID string) ([]Artwork, error)
 	ListGamesForLibrary(ctx context.Context, libraryID string) ([]ListGamesForLibraryRow, error)
 	ListLibraries(ctx context.Context) ([]Library, error)
 	ListScanErrors(ctx context.Context, arg ListScanErrorsParams) ([]ScanError, error)
@@ -39,6 +43,7 @@ type Querier interface {
 	UpdateGameDetected(ctx context.Context, arg UpdateGameDetectedParams) error
 	UpdateGamePath(ctx context.Context, arg UpdateGamePathParams) error
 	UpdateScanRunProgress(ctx context.Context, arg UpdateScanRunProgressParams) error
+	UpsertArtwork(ctx context.Context, arg UpsertArtworkParams) error
 	UpsertGameOverride(ctx context.Context, arg UpsertGameOverrideParams) error
 }
 

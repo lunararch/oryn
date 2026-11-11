@@ -15,6 +15,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
+import { artworkUrl } from "../lib/api/artwork";
 import { useGame, useSetFavorite } from "../lib/api/queries";
 import { formatDate } from "../lib/format";
 
@@ -31,6 +32,8 @@ export function GameDetailPage() {
   const game = useGame(gameId);
   const favorite = useSetFavorite();
   const [editing, setEditing] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [bannerFailed, setBannerFailed] = useState(false);
 
   if (game.isLoading) {
     return <DetailSkeleton />;
@@ -54,6 +57,9 @@ export function GameDetailPage() {
   if (!game.data) return null;
   const entry = game.data;
   const isMissing = entry.availability === "missing";
+  const cover = artworkUrl(entry.coverArtworkId, "detail");
+  const banner =
+    artworkUrl(entry.bannerArtworkId, "detail") ?? artworkUrl(entry.coverArtworkId, "detail");
 
   return (
     <div className="space-y-8">
@@ -80,14 +86,29 @@ export function GameDetailPage() {
         <div className="relative">
           <div className="absolute inset-0 opacity-60">
             <GamePoster title={entry.title} className="h-full w-full" showText={false} />
+            {banner && !bannerFailed ? (
+              <img
+                src={banner}
+                alt=""
+                onError={() => setBannerFailed(true)}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : null}
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/80 to-ink-950/30" />
           <div className="relative grid gap-7 px-5 py-7 sm:px-8 sm:py-9 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-9">
             <div className="mx-auto w-40 sm:w-48 md:mx-0 md:w-full">
-              <GamePoster
-                title={entry.title}
-                className="aspect-[2/3] w-full rounded-2xl border border-white/10 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)]"
-              />
+              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)]">
+                <GamePoster title={entry.title} className="h-full w-full" />
+                {cover && !coverFailed ? (
+                  <img
+                    src={cover}
+                    alt={`Cover artwork for ${entry.title}`}
+                    onError={() => setCoverFailed(true)}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
             </div>
 
             <div className="flex min-w-0 flex-col justify-end">

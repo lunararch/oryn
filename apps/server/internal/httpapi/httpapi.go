@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 
+	"github.com/lunararch/oryn/apps/server/internal/artwork"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
 	"github.com/lunararch/oryn/apps/server/internal/store/db"
@@ -35,6 +36,7 @@ type Options struct {
 	Games         *games.Service
 	Scans         *scanner.Manager
 	Queries       *db.Queries
+	Artwork       *artwork.Service
 }
 
 // New builds the HTTP API router.
@@ -57,6 +59,7 @@ func New(opts Options) http.Handler {
 		r.Delete("/games/{gameID}/favorite", opts.removeFavorite)
 
 		r.Get("/stats", opts.getStats)
+		r.Get("/artwork/{artworkID}/{variant}", opts.getArtwork)
 
 		r.Post("/scans", opts.startScan)
 		r.Get("/scans/current", opts.currentScan)

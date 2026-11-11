@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -51,6 +54,21 @@ func TestScanAndLibraryAPI(t *testing.T) {
 		t.Errorf("first title = %v", list.Items[0]["title"])
 	}
 	gameID := list.Items[0]["id"].(string)
+	coverID, _ := list.Items[0]["coverArtworkId"].(string)
+	if coverID == "" {
+		t.Fatal("coverArtworkId is empty after scan")
+	}
+
+	rec = request(t, handler, http.MethodGet, "/api/v1/artwork/"+coverID+"/card", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("artwork status = %d; body = %s", rec.Code, rec.Body)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "image/jpeg" {
+		t.Errorf("artwork Content-Type = %q, want image/jpeg", got)
+	}
+	if rec.Body.Len() == 0 {
+		t.Error("artwork body is empty")
+	}
 
 	rec = request(t, handler, http.MethodPut, "/api/v1/games/"+gameID+"/favorite", nil)
 	if rec.Code != http.StatusNoContent {
@@ -251,4 +269,26 @@ define build.name = "%s"
 		}
 		return fmt.Sprintf("\ndefine gui.about = _p(\"\"\"%s\"\"\")", description)
 	}(), name))
+	writeAPIPNG(t, filepath.Join(dir, "cover.png"), 600, 900)
+}
+
+func writeAPIPNG(t *testing.T, path string, width, height int) {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.SetRGBA(x, y, color.RGBA{R: uint8(x % 255), G: uint8(y % 255), B: 90, A: 255})
+		}
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := png.Encode(file, img); err != nil {
+		_ = file.Close()
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
 }

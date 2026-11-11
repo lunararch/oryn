@@ -8,8 +8,10 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"path/filepath"
 	"time"
 
+	"github.com/lunararch/oryn/apps/server/internal/artwork"
 	"github.com/lunararch/oryn/apps/server/internal/config"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/httpapi"
@@ -77,6 +79,17 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		Logger:   logger,
 	})
 	scanManager := scanner.NewManager(scanService, logger, now)
+	artworkService := artwork.NewService(artwork.Options{
+		Store:    s,
+		CacheDir: filepath.Join(cfg.DataDir, "artwork"),
+		Now:      now,
+		Logger:   logger,
+	})
+	scanManager.SetOnComplete(func(ctx context.Context, lib db.Library) {
+		if err := artworkService.SyncLibrary(ctx, db.New(s.DB), lib); err != nil {
+			logger.Warn("artwork sync failed", "library_id", lib.ID, "error", err)
+		}
+	})
 
 	handler := httpapi.New(httpapi.Options{
 		Version: version,
@@ -95,6 +108,7 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		Games:   gamesService,
 		Scans:   scanManager,
 		Queries: queries,
+		Artwork: artworkService,
 	})
 
 	return &App{

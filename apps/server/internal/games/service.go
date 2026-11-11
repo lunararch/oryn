@@ -68,6 +68,8 @@ type Game struct {
 	Rating           *int
 	Notes            string
 	Favorite         bool
+	CoverArtworkID   string
+	BannerArtworkID  string
 	AddedAt          int64
 	LastSeenAt       int64
 	FirstSeenAt      int64
@@ -172,6 +174,8 @@ SELECT
     o.rating,
     COALESCE(o.notes, '') AS notes,
     EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite,
+    COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'cover'), '') AS cover_artwork_id,
+    COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS banner_artwork_id,
     g.first_seen_at, g.last_seen_at
 FROM games g
 LEFT JOIN game_overrides o ON o.game_id = g.id
@@ -364,7 +368,8 @@ func scanGame(rows *sql.Rows) (Game, error) {
 		&game.ID, &game.LibraryID, &game.RelativePath, &game.FolderName,
 		&game.Title, &game.Description, &game.Developer, &game.Publisher,
 		&game.ReleaseDate, &game.Version, &game.Availability, &game.CompletionStatus,
-		&rating, &game.Notes, &favorite, &game.FirstSeenAt, &game.LastSeenAt,
+		&rating, &game.Notes, &favorite, &game.CoverArtworkID, &game.BannerArtworkID,
+		&game.FirstSeenAt, &game.LastSeenAt,
 	); err != nil {
 		return Game{}, fmt.Errorf("scan game: %w", err)
 	}
@@ -392,6 +397,8 @@ func gameFromRow(row db.GetGameRow) Game {
 		Availability:     row.AvailabilityStatus,
 		CompletionStatus: "unplayed",
 		Favorite:         row.IsFavorite,
+		CoverArtworkID:   row.CoverArtworkID,
+		BannerArtworkID:  row.BannerArtworkID,
 		AddedAt:          row.FirstSeenAt,
 		LastSeenAt:       row.LastSeenAt,
 		FirstSeenAt:      row.FirstSeenAt,

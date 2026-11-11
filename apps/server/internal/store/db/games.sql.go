@@ -32,6 +32,20 @@ func (q *Queries) CountGames(ctx context.Context, libraryID string) (int64, erro
 	return count, err
 }
 
+const deleteArtwork = `-- name: DeleteArtwork :exec
+DELETE FROM artwork WHERE game_id = ? AND kind = ?
+`
+
+type DeleteArtworkParams struct {
+	GameID string
+	Kind   string
+}
+
+func (q *Queries) DeleteArtwork(ctx context.Context, arg DeleteArtworkParams) error {
+	_, err := q.db.ExecContext(ctx, deleteArtwork, arg.GameID, arg.Kind)
+	return err
+}
+
 const deleteFavorite = `-- name: DeleteFavorite :exec
 DELETE FROM favorites WHERE game_id = ?
 `
@@ -50,6 +64,57 @@ func (q *Queries) DeleteGameOverride(ctx context.Context, gameID string) error {
 	return err
 }
 
+const getArtwork = `-- name: GetArtwork :one
+SELECT id, game_id, kind, origin, source_rel_path, cache_key, mime_type, width, height, created_at, updated_at FROM artwork WHERE id = ?
+`
+
+func (q *Queries) GetArtwork(ctx context.Context, id string) (Artwork, error) {
+	row := q.db.QueryRowContext(ctx, getArtwork, id)
+	var i Artwork
+	err := row.Scan(
+		&i.ID,
+		&i.GameID,
+		&i.Kind,
+		&i.Origin,
+		&i.SourceRelPath,
+		&i.CacheKey,
+		&i.MimeType,
+		&i.Width,
+		&i.Height,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getArtworkForGame = `-- name: GetArtworkForGame :one
+SELECT id, game_id, kind, origin, source_rel_path, cache_key, mime_type, width, height, created_at, updated_at FROM artwork WHERE game_id = ? AND kind = ?
+`
+
+type GetArtworkForGameParams struct {
+	GameID string
+	Kind   string
+}
+
+func (q *Queries) GetArtworkForGame(ctx context.Context, arg GetArtworkForGameParams) (Artwork, error) {
+	row := q.db.QueryRowContext(ctx, getArtworkForGame, arg.GameID, arg.Kind)
+	var i Artwork
+	err := row.Scan(
+		&i.ID,
+		&i.GameID,
+		&i.Kind,
+		&i.Origin,
+		&i.SourceRelPath,
+		&i.CacheKey,
+		&i.MimeType,
+		&i.Width,
+		&i.Height,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getGame = `-- name: GetGame :one
 SELECT g.id, g.library_id, g.relative_path, g.folder_name, g.detected_title, g.detected_description, g.detected_developer, g.detected_publisher, g.detected_release_date, g.detected_version, g.detection_confidence, g.detection_evidence, g.availability_status, g.filesystem_fingerprint, g.first_seen_at, g.last_seen_at, g.created_at, g.updated_at,
        o.title AS override_title,
@@ -60,7 +125,9 @@ SELECT g.id, g.library_id, g.relative_path, g.folder_name, g.detected_title, g.d
        o.rating AS override_rating,
        o.notes AS override_notes,
        o.completion_status AS override_completion_status,
-       EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite
+       EXISTS(SELECT 1 FROM favorites f WHERE f.game_id = g.id) AS is_favorite,
+       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'cover'), '') AS TEXT) AS cover_artwork_id,
+       CAST(COALESCE((SELECT a.id FROM artwork a WHERE a.game_id = g.id AND a.kind = 'banner'), '') AS TEXT) AS banner_artwork_id
 FROM games g
 LEFT JOIN game_overrides o ON o.game_id = g.id
 WHERE g.id = ?
@@ -94,6 +161,8 @@ type GetGameRow struct {
 	OverrideNotes            sql.NullString
 	OverrideCompletionStatus sql.NullString
 	IsFavorite               bool
+	CoverArtworkID           string
+	BannerArtworkID          string
 }
 
 func (q *Queries) GetGame(ctx context.Context, id string) (GetGameRow, error) {
@@ -127,6 +196,8 @@ func (q *Queries) GetGame(ctx context.Context, id string) (GetGameRow, error) {
 		&i.OverrideNotes,
 		&i.OverrideCompletionStatus,
 		&i.IsFavorite,
+		&i.CoverArtworkID,
+		&i.BannerArtworkID,
 	)
 	return i, err
 }
@@ -286,6 +357,45 @@ func (q *Queries) InsertGame(ctx context.Context, arg InsertGameParams) error {
 		arg.UpdatedAt,
 	)
 	return err
+}
+
+const listArtworkForGame = `-- name: ListArtworkForGame :many
+SELECT id, game_id, kind, origin, source_rel_path, cache_key, mime_type, width, height, created_at, updated_at FROM artwork WHERE game_id = ?
+`
+
+func (q *Queries) ListArtworkForGame(ctx context.Context, gameID string) ([]Artwork, error) {
+	rows, err := q.db.QueryContext(ctx, listArtworkForGame, gameID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Artwork{}
+	for rows.Next() {
+		var i Artwork
+		if err := rows.Scan(
+			&i.ID,
+			&i.GameID,
+			&i.Kind,
+			&i.Origin,
+			&i.SourceRelPath,
+			&i.CacheKey,
+			&i.MimeType,
+			&i.Width,
+			&i.Height,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listGamesForLibrary = `-- name: ListGamesForLibrary :many
@@ -453,6 +563,52 @@ func (q *Queries) UpdateGamePath(ctx context.Context, arg UpdateGamePathParams) 
 		arg.LastSeenAt,
 		arg.UpdatedAt,
 		arg.ID,
+	)
+	return err
+}
+
+const upsertArtwork = `-- name: UpsertArtwork :exec
+INSERT INTO artwork (
+    id, game_id, kind, origin, source_rel_path, cache_key,
+    mime_type, width, height, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(game_id, kind) DO UPDATE SET
+    origin = excluded.origin,
+    source_rel_path = excluded.source_rel_path,
+    cache_key = excluded.cache_key,
+    mime_type = excluded.mime_type,
+    width = excluded.width,
+    height = excluded.height,
+    updated_at = excluded.updated_at
+`
+
+type UpsertArtworkParams struct {
+	ID            string
+	GameID        string
+	Kind          string
+	Origin        string
+	SourceRelPath sql.NullString
+	CacheKey      string
+	MimeType      string
+	Width         int64
+	Height        int64
+	CreatedAt     int64
+	UpdatedAt     int64
+}
+
+func (q *Queries) UpsertArtwork(ctx context.Context, arg UpsertArtworkParams) error {
+	_, err := q.db.ExecContext(ctx, upsertArtwork,
+		arg.ID,
+		arg.GameID,
+		arg.Kind,
+		arg.Origin,
+		arg.SourceRelPath,
+		arg.CacheKey,
+		arg.MimeType,
+		arg.Width,
+		arg.Height,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	return err
 }

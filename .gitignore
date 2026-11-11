@@ -12,6 +12,9 @@ apps/desktop/build/bin/
 # Dependencies
 node_modules/
 
+# TypeScript incremental build state
+*.tsbuildinfo
+
 # Runtime data (never commit the library database or artwork cache)
 data/
 *.db

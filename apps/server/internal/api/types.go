@@ -26,6 +26,8 @@ type Game struct {
 	Rating           *int   `json:"rating,omitempty"`
 	Notes            string `json:"notes"`
 	Favorite         bool   `json:"favorite"`
+	CoverArtworkID   string `json:"coverArtworkId,omitempty"`
+	BannerArtworkID  string `json:"bannerArtworkId,omitempty"`
 	AddedAt          string `json:"addedAt"`
 	LastSeenAt       string `json:"lastSeenAt"`
 }
