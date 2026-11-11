@@ -4,7 +4,7 @@ SHELL := /bin/bash
 SERVER_DIR := apps/server
 FRONTEND_DIR := apps/frontend
 
-.PHONY: help setup dev dev-server dev-web test test-server test-web lint lint-server lint-web build build-server build-web fmt openapi-types
+.PHONY: help setup dev dev-server dev-web test test-server test-web lint lint-server lint-web build build-server build-web fmt api-types
 
 help:
 	@printf '%s\n' \
@@ -16,6 +16,7 @@ help:
 	  '  make test        Run all Go and frontend tests' \
 	  '  make lint        Run Go vet and frontend lint/type-check' \
 	  '  make build       Build the frontend and server binary' \
+	  '  make api-types   Regenerate TypeScript API types from Go' \
 	  '  make fmt         Format Go and frontend sources'
 
 setup:
@@ -63,6 +64,9 @@ build-web:
 build-server:
 	mkdir -p $(SERVER_DIR)/bin
 	cd $(SERVER_DIR) && go build -trimpath -o bin/oryn-server ./cmd/oryn-server
+
+api-types:
+	cd $(SERVER_DIR) && tygo generate --config tygo.yaml
 
 fmt:
 	cd $(SERVER_DIR) && gofmt -w .

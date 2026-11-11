@@ -9,6 +9,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+
+	"github.com/lunararch/oryn/apps/server/internal/games"
+	"github.com/lunararch/oryn/apps/server/internal/scanner"
+	"github.com/lunararch/oryn/apps/server/internal/store/db"
 )
 
 // LibraryStatus describes whether the configured game library is currently
@@ -27,24 +31,10 @@ type Options struct {
 	Version       string
 	Ping          func(context.Context) error
 	LibraryStatus func(context.Context) LibraryStatus
-}
-
-type healthResponse struct {
-	Status   string `json:"status"`
-	Version  string `json:"version"`
-	Database string `json:"database"`
-	Library  string `json:"library"`
-}
-
-type versionResponse struct {
-	Version string `json:"version"`
-}
-
-type errorResponse struct {
-	Error struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	} `json:"error"`
+	Library       *db.Library
+	Games         *games.Service
+	Scans         *scanner.Manager
+	Queries       *db.Queries
 }
 
 // New builds the HTTP API router.
@@ -58,6 +48,21 @@ func New(opts Options) http.Handler {
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", healthHandler(opts))
 		r.Get("/version", versionHandler(opts))
+		r.Get("/libraries", opts.listLibraries)
+
+		r.Get("/games", opts.listGames)
+		r.Get("/games/{gameID}", opts.getGame)
+		r.Patch("/games/{gameID}", opts.updateGame)
+		r.Put("/games/{gameID}/favorite", opts.setFavorite)
+		r.Delete("/games/{gameID}/favorite", opts.removeFavorite)
+
+		r.Get("/stats", opts.getStats)
+
+		r.Post("/scans", opts.startScan)
+		r.Get("/scans/current", opts.currentScan)
+		r.Get("/scans", opts.listScans)
+		r.Get("/scans/{scanID}", opts.getScan)
+		r.Post("/scans/{scanID}/cancel", opts.cancelScan)
 	})
 
 	router.NotFound(func(w http.ResponseWriter, r *http.Request) {

@@ -28,7 +28,12 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	application := app.New(cfg, logger, version)
+	application, err := app.New(cfg, logger, version)
+	if err != nil {
+		logger.Error("could not start server", "error", err)
+		os.Exit(1)
+	}
+	defer func() { _ = application.Close() }()
 	if err := application.Run(ctx); err != nil {
 		logger.Error("server stopped with error", "error", err)
 		os.Exit(1)

@@ -36,6 +36,13 @@ make dev
 
 Copy `.env.example` to `.env` for local reference and export the values you need. The server reads environment variables directly; it does not load `.env` files.
 
+Generate TypeScript API types after changing Go request or response types:
+
+```sh
+go install github.com/gzuidhof/tygo@v0.2.21
+make api-types
+```
+
 Run checks with:
 
 ```sh

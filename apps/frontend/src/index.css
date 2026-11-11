@@ -1,0 +1,114 @@
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/instrument-sans";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --color-ink-950: #0c0b09;
+  --color-ink-900: #12110f;
+  --color-ink-850: #171510;
+  --color-ink-800: #1d1a15;
+  --color-ink-700: #28231c;
+  --color-paper: #f2ecdf;
+  --color-paper-muted: #a9a092;
+  --color-paper-faint: #746d62;
+  --color-brass: #c9a86a;
+  --color-brass-soft: #e5d0a5;
+  --color-rust: #a94f3a;
+  --color-rust-soft: #e6a68f;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  html {
+    min-width: 320px;
+    background: var(--color-ink-950);
+    scrollbar-color: #3a3328 transparent;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 700px at 88% -10%, rgb(201 168 106 / 0.09), transparent 60%),
+      radial-gradient(900px 600px at 4% 8%, rgb(169 79 58 / 0.055), transparent 55%),
+      var(--color-ink-950);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: rgb(201 168 106 / 0.28);
+    color: var(--color-paper);
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: none;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-[1.4rem] border border-white/8 bg-ink-900/78 shadow-[0_24px_70px_-42px_rgba(0,0,0,0.9)] backdrop-blur-sm;
+  }
+
+  .surface-raised {
+    @apply rounded-[1.4rem] border border-white/10 bg-ink-850/90 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.95)];
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-white/10 bg-ink-950/55 px-3.5 py-2.5 text-sm text-paper placeholder:text-paper-faint transition focus:border-brass/50 focus:ring-2 focus:ring-brass/15;
+  }
+
+  .game-card-grid {
+    @apply overflow-hidden rounded-[1.35rem] border border-white/8 bg-ink-900/70 transition duration-300 hover:-translate-y-1 hover:border-brass/25 hover:bg-ink-850/90 hover:shadow-[0_30px_70px_-35px_rgba(0,0,0,0.9)];
+  }
+
+  .game-card-list {
+    @apply rounded-[1.35rem] border border-white/8 bg-ink-900/60 transition duration-200 hover:border-brass/20 hover:bg-ink-850/85;
+  }
+
+  .poster-glow {
+    @apply pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full blur-3xl;
+    background: radial-gradient(circle, rgb(242 236 223 / 0.18), transparent 68%);
+  }
+
+  .eyebrow {
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-brass/85;
+  }
+
+  .page-title {
+    @apply font-display text-4xl leading-[1.05] tracking-[-0.02em] text-paper sm:text-5xl;
+  }
+
+  .link-quiet {
+    @apply text-paper-muted underline decoration-white/15 underline-offset-4 transition hover:text-paper hover:decoration-brass/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
