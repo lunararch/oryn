@@ -3,6 +3,7 @@
 *.out
 coverage.*
 apps/server/bin/
+apps/desktop/bin/
 apps/frontend/dist/
 apps/frontend/coverage/
 apps/frontend/playwright-report/
