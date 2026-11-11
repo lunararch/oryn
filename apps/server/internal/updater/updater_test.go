@@ -56,15 +56,12 @@ func TestApplyBuildsNewCommitAndChecksHealth(t *testing.T) {
 	}
 	for _, want := range [][]string{
 		{"git", "checkout", "--force", "new456"},
-		{"docker", "compose", "--env-file", ".env", "-f", "deployments/docker/compose.yaml", "build"},
+		{"docker", "compose", "--env-file", ".env", "-f", "deployments/docker/compose.yaml", "build", "--build-arg", "VERSION=v0.2.0"},
 		{"docker", "compose", "--env-file", ".env", "-f", "deployments/docker/compose.yaml", "up", "-d"},
 	} {
 		if !runner.hasCall(want) {
 			t.Errorf("missing call %v; calls = %v", want, runner.callStrings())
 		}
-	}
-	if !runner.hasEnv("ORYN_VERSION=v0.2.0") {
-		t.Errorf("build environment did not carry the release version; envs = %v", runner.envs)
 	}
 	if len(health.urls) != 1 || health.urls[0] != "http://127.0.0.1:8082/api/v1/health" {
 		t.Errorf("health URLs = %v", health.urls)
@@ -169,13 +166,11 @@ type fakeRunner struct {
 	responses map[string]string
 	errors    map[string]error
 	calls     [][]string
-	envs      [][]string
 }
 
-func (f *fakeRunner) Run(_ context.Context, _ string, env []string, name string, args ...string) (string, error) {
+func (f *fakeRunner) Run(_ context.Context, _ string, _ []string, name string, args ...string) (string, error) {
 	call := append([]string{name}, args...)
 	f.calls = append(f.calls, call)
-	f.envs = append(f.envs, env)
 	key := strings.Join(call, " ")
 	if err := f.errors[key]; err != nil {
 		return "", err
@@ -196,17 +191,6 @@ func (f *fakeRunner) hasCall(want []string) bool {
 	for _, call := range f.calls {
 		if strings.Join(call, "\x00") == strings.Join(want, "\x00") {
 			return true
-		}
-	}
-	return false
-}
-
-func (f *fakeRunner) hasEnv(want string) bool {
-	for _, env := range f.envs {
-		for _, item := range env {
-			if item == want {
-				return true
-			}
 		}
 	}
 	return false

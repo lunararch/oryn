@@ -175,7 +175,11 @@ func (u *Updater) Apply(ctx context.Context) (Result, error) {
 }
 
 func (u *Updater) rebuild(ctx context.Context) error {
-	if _, err := u.runDocker(ctx, append(u.composeArgs(), "build")...); err != nil {
+	buildArgs := append(u.composeArgs(), "build")
+	if u.version != "" {
+		buildArgs = append(buildArgs, "--build-arg", "VERSION="+u.version)
+	}
+	if _, err := u.runDocker(ctx, buildArgs...); err != nil {
 		return fmt.Errorf("build image: %w", err)
 	}
 	if _, err := u.runDocker(ctx, append(u.composeArgs(), "up", "-d")...); err != nil {
@@ -203,11 +207,7 @@ func (u *Updater) runDocker(ctx context.Context, args ...string) (string, error)
 	command := append([]string{}, u.Config.DockerCommand...)
 	name := command[0]
 	command = append(command, args...)
-	var env []string
-	if u.version != "" {
-		env = append(env, "ORYN_VERSION="+u.version)
-	}
-	return u.Runner.Run(ctx, u.Config.RepoDir, env, name, command[1:]...)
+	return u.Runner.Run(ctx, u.Config.RepoDir, nil, name, command[1:]...)
 }
 
 func shortCommit(commit string) string {
