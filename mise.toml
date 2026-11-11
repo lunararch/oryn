@@ -1,0 +1,5 @@
+[tools]
+go = "1.27.4"
+node = "24"
+sqlc = "1.31.1"
+golangci-lint = "latest"
