@@ -63,15 +63,19 @@ type Stats struct {
 }
 
 type PlaySession struct {
-	ID              string `json:"id"`
-	GameID          string `json:"gameId"`
-	StartedAt       string `json:"startedAt"`
-	EndedAt         string `json:"endedAt,omitempty"`
-	DurationSeconds int    `json:"durationSeconds"`
-	Status          string `json:"status"`
-	Source          string `json:"source"`
-	ExitCode        *int   `json:"exitCode,omitempty"`
-	Notes           string `json:"notes"`
+	ID                       string `json:"id"`
+	GameID                   string `json:"gameId"`
+	ClientID                 string `json:"clientId,omitempty"`
+	StartedAt                string `json:"startedAt"`
+	EndedAt                  string `json:"endedAt,omitempty"`
+	DurationSeconds          int    `json:"durationSeconds"`
+	Status                   string `json:"status"`
+	Source                   string `json:"source"`
+	ExitCode                 *int   `json:"exitCode,omitempty"`
+	Notes                    string `json:"notes"`
+	LastHeartbeatAt          string `json:"lastHeartbeatAt,omitempty"`
+	HeartbeatIntervalSeconds int    `json:"heartbeatIntervalSeconds,omitempty"`
+	TimeoutSeconds           int    `json:"timeoutSeconds,omitempty"`
 }
 
 type PlaySessionsResponse struct {
@@ -113,6 +117,44 @@ type CollectionMembershipsResponse struct {
 type CollectionRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type DesktopClient struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Platform     string `json:"platform"`
+	RegisteredAt string `json:"registeredAt"`
+	LastSeenAt   string `json:"lastSeenAt"`
+	RevokedAt    string `json:"revokedAt,omitempty"`
+}
+
+type ClientsResponse struct {
+	Items []DesktopClient `json:"items"`
+}
+
+type PairingCodeResponse struct {
+	Code      string `json:"code"`
+	ExpiresAt string `json:"expiresAt"`
+}
+
+type RegisterClientRequest struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Platform string `json:"platform"`
+}
+
+type RegisterClientResponse struct {
+	Client DesktopClient `json:"client"`
+	Token  string        `json:"token"`
+}
+
+type DesktopSessionRequest struct {
+	GameID string `json:"gameId"`
+}
+
+type FinishSessionRequest struct {
+	Status   string `json:"status"`
+	ExitCode *int   `json:"exitCode"`
 }
 
 type ScanState struct {

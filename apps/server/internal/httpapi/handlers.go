@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
+	"github.com/lunararch/oryn/apps/server/internal/clients"
 	"github.com/lunararch/oryn/apps/server/internal/collections"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
@@ -484,6 +485,14 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "not_found", "session not found")
 	case errors.Is(err, sessions.ErrValidation):
 		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case errors.Is(err, sessions.ErrAlreadyRunning):
+		writeError(w, http.StatusConflict, "session_already_running", "a session is already running for this client")
+	case errors.Is(err, clients.ErrInvalidCode):
+		writeError(w, http.StatusBadRequest, "invalid_pairing_code", "pairing code is invalid, expired, or already used")
+	case errors.Is(err, clients.ErrValidation):
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case errors.Is(err, clients.ErrUnauthorized):
+		writeError(w, http.StatusUnauthorized, "unauthorized", "client token is invalid or revoked")
 	case errors.Is(err, collections.ErrNotFound):
 		writeError(w, http.StatusNotFound, "not_found", "collection not found")
 	case errors.Is(err, collections.ErrValidation):

@@ -40,7 +40,7 @@ function makeGame(overrides: Partial<MockGame> = {}): MockGame {
 }
 
 test("dashboard and web-only capabilities", async ({ page }) => {
-  let games = [makeGame(), makeGame({ id: "game-2", title: "Beta", relativePath: "Beta" })];
+  const games = [makeGame(), makeGame({ id: "game-2", title: "Beta", relativePath: "Beta" })];
   await mockAPI(page, () => games);
 
   await page.goto("/");
@@ -50,7 +50,7 @@ test("dashboard and web-only capabilities", async ({ page }) => {
 });
 
 test("searches the library and toggles a favorite", async ({ page }) => {
-  let games = [makeGame(), makeGame({ id: "game-2", title: "Beta", relativePath: "Beta" })];
+  const games = [makeGame(), makeGame({ id: "game-2", title: "Beta", relativePath: "Beta" })];
   await mockAPI(page, () => games);
 
   await page.goto("/library");
@@ -69,7 +69,7 @@ test("searches the library and toggles a favorite", async ({ page }) => {
 });
 
 test("edits metadata from the detail page", async ({ page }) => {
-  let games = [makeGame()];
+  const games = [makeGame()];
   await mockAPI(page, () => games);
 
   await page.goto("/games/game-1");
@@ -158,7 +158,11 @@ async function mockAPI(
     }
     if (/^\/api\/v1\/games\/[^/]+$/.test(path)) {
       const gameID = path.split("/").pop();
-      return fulfill(route, 200, games.find((item) => item.id === gameID));
+      return fulfill(
+        route,
+        200,
+        games.find((item) => item.id === gameID),
+      );
     }
     if (path === "/api/v1/games") {
       const query = (url.searchParams.get("q") ?? "").toLowerCase();

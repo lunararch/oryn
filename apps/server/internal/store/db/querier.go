@@ -16,20 +16,26 @@ type Querier interface {
 	CountGames(ctx context.Context, libraryID string) (int64, error)
 	CountPlaySessionsForGame(ctx context.Context, gameID string) (int64, error)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) error
+	CreateDesktopClient(ctx context.Context, arg CreateDesktopClientParams) error
 	CreateLibrary(ctx context.Context, arg CreateLibraryParams) error
+	CreatePairingCode(ctx context.Context, arg CreatePairingCodeParams) error
 	CreateScanRun(ctx context.Context, arg CreateScanRunParams) error
 	DeleteArtwork(ctx context.Context, arg DeleteArtworkParams) error
 	DeleteCollection(ctx context.Context, id string) error
+	DeleteExpiredPairingCodes(ctx context.Context, expiresAt int64) error
 	DeleteFavorite(ctx context.Context, gameID string) error
 	DeleteGameOverride(ctx context.Context, gameID string) error
 	DeletePlaySession(ctx context.Context, id string) error
 	FailStaleScanRuns(ctx context.Context, finishedAt sql.NullInt64) error
 	FinishScanRun(ctx context.Context, arg FinishScanRunParams) error
+	FinishSession(ctx context.Context, arg FinishSessionParams) error
 	GetArtwork(ctx context.Context, id string) (Artwork, error)
 	GetArtworkForGame(ctx context.Context, arg GetArtworkForGameParams) (Artwork, error)
 	GetCollection(ctx context.Context, id string) (GetCollectionRow, error)
 	GetCollectionName(ctx context.Context, id string) (string, error)
 	GetCurrentScanRun(ctx context.Context) (ScanRun, error)
+	GetDesktopClient(ctx context.Context, id string) (DesktopClient, error)
+	GetDesktopClientByTokenHash(ctx context.Context, tokenHash string) (DesktopClient, error)
 	GetGame(ctx context.Context, id string) (GetGameRow, error)
 	GetGameIDByFingerprint(ctx context.Context, arg GetGameIDByFingerprintParams) ([]string, error)
 	GetGameIDByPath(ctx context.Context, arg GetGameIDByPathParams) (string, error)
@@ -39,22 +45,32 @@ type Querier interface {
 	GetLibraryByRoot(ctx context.Context, rootPath string) (Library, error)
 	GetPlaySession(ctx context.Context, id string) (PlaySession, error)
 	GetPlayStats(ctx context.Context, libraryID string) (GetPlayStatsRow, error)
+	GetRunningSessionForClient(ctx context.Context, clientID sql.NullString) (PlaySession, error)
 	GetScanRun(ctx context.Context, id string) (ScanRun, error)
 	GetStats(ctx context.Context, libraryID string) (GetStatsRow, error)
+	HeartbeatSession(ctx context.Context, arg HeartbeatSessionParams) error
+	InsertDesktopSession(ctx context.Context, arg InsertDesktopSessionParams) error
 	InsertGame(ctx context.Context, arg InsertGameParams) error
 	InsertPlaySession(ctx context.Context, arg InsertPlaySessionParams) error
+	ListActivePairingCodes(ctx context.Context, expiresAt int64) ([]PairingCode, error)
 	ListArtworkForGame(ctx context.Context, gameID string) ([]Artwork, error)
 	ListCollections(ctx context.Context) ([]ListCollectionsRow, error)
 	ListCollectionsForGame(ctx context.Context, gameID string) ([]ListCollectionsForGameRow, error)
+	ListDesktopClients(ctx context.Context) ([]DesktopClient, error)
 	ListGamesForLibrary(ctx context.Context, libraryID string) ([]ListGamesForLibraryRow, error)
 	ListLibraries(ctx context.Context) ([]Library, error)
 	ListPlaySessionsForGame(ctx context.Context, arg ListPlaySessionsForGameParams) ([]PlaySession, error)
 	ListRecentPlaySessions(ctx context.Context, limit int64) ([]PlaySession, error)
 	ListScanErrors(ctx context.Context, arg ListScanErrorsParams) ([]ScanError, error)
 	ListScanRuns(ctx context.Context, limit int64) ([]ScanRun, error)
+	ListStaleRunningSessions(ctx context.Context, lastHeartbeatAt sql.NullInt64) ([]PlaySession, error)
+	MarkPairingCodeUsed(ctx context.Context, arg MarkPairingCodeUsedParams) error
+	MarkSessionInterrupted(ctx context.Context, arg MarkSessionInterruptedParams) error
 	RemoveGameFromCollection(ctx context.Context, arg RemoveGameFromCollectionParams) error
+	RevokeDesktopClient(ctx context.Context, arg RevokeDesktopClientParams) error
 	SetFavorite(ctx context.Context, arg SetFavoriteParams) error
 	SetGameAvailability(ctx context.Context, arg SetGameAvailabilityParams) error
+	TouchDesktopClient(ctx context.Context, arg TouchDesktopClientParams) error
 	TouchLibraryScan(ctx context.Context, arg TouchLibraryScanParams) error
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) error
 	UpdateGameDetected(ctx context.Context, arg UpdateGameDetectedParams) error

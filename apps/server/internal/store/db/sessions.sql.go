@@ -44,7 +44,7 @@ func (q *Queries) GetGamePlaytime(ctx context.Context, gameID string) (interface
 }
 
 const getPlaySession = `-- name: GetPlaySession :one
-SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at FROM play_sessions WHERE id = ?
+SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at, last_heartbeat_at FROM play_sessions WHERE id = ?
 `
 
 func (q *Queries) GetPlaySession(ctx context.Context, id string) (PlaySession, error) {
@@ -63,6 +63,7 @@ func (q *Queries) GetPlaySession(ctx context.Context, id string) (PlaySession, e
 		&i.Notes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.LastHeartbeatAt,
 	)
 	return i, err
 }
@@ -129,7 +130,7 @@ func (q *Queries) InsertPlaySession(ctx context.Context, arg InsertPlaySessionPa
 }
 
 const listPlaySessionsForGame = `-- name: ListPlaySessionsForGame :many
-SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at FROM play_sessions
+SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at, last_heartbeat_at FROM play_sessions
 WHERE game_id = ?
 ORDER BY started_at DESC
 LIMIT ? OFFSET ?
@@ -163,6 +164,7 @@ func (q *Queries) ListPlaySessionsForGame(ctx context.Context, arg ListPlaySessi
 			&i.Notes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.LastHeartbeatAt,
 		); err != nil {
 			return nil, err
 		}
@@ -178,7 +180,7 @@ func (q *Queries) ListPlaySessionsForGame(ctx context.Context, arg ListPlaySessi
 }
 
 const listRecentPlaySessions = `-- name: ListRecentPlaySessions :many
-SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at FROM play_sessions
+SELECT id, game_id, client_id, started_at, ended_at, duration_seconds, status, source, exit_code, notes, created_at, updated_at, last_heartbeat_at FROM play_sessions
 ORDER BY started_at DESC
 LIMIT ?
 `
@@ -205,6 +207,7 @@ func (q *Queries) ListRecentPlaySessions(ctx context.Context, limit int64) ([]Pl
 			&i.Notes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.LastHeartbeatAt,
 		); err != nil {
 			return nil, err
 		}

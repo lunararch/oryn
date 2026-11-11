@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
+	"github.com/lunararch/oryn/apps/server/internal/clients"
 	"github.com/lunararch/oryn/apps/server/internal/collections"
 	"github.com/lunararch/oryn/apps/server/internal/config"
 	"github.com/lunararch/oryn/apps/server/internal/games"
@@ -25,11 +26,12 @@ import (
 
 // App owns the server process lifecycle.
 type App struct {
-	cfg    config.Config
-	logger *slog.Logger
-	server *http.Server
-	store  *store.Store
-	probe  library.Probe
+	cfg      config.Config
+	logger   *slog.Logger
+	server   *http.Server
+	store    *store.Store
+	probe    library.Probe
+	sessions *sessions.Service
 }
 
 // New builds the application, opens the database, and prepares the HTTP handler.
@@ -75,6 +77,12 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 	gamesService := games.NewService(s, now)
 	sessionsService := sessions.NewService(s, now)
 	collectionsService := collections.NewService(s, now)
+	clientsService := clients.NewService(s, now)
+	if recovered, err := sessionsService.RecoverStale(migrateCtx, 2*time.Minute); err != nil {
+		logger.Warn("could not recover stale sessions", "error", err)
+	} else if recovered > 0 {
+		logger.Info("recovered stale play sessions", "count", recovered)
+	}
 	scanService := scanner.NewService(scanner.ServiceOptions{
 		Store:    s,
 		MaxDepth: cfg.ScanMaxDepth,
@@ -115,6 +123,7 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 		Artwork:     artworkService,
 		Sessions:    sessionsService,
 		Collections: collectionsService,
+		Clients:     clientsService,
 	})
 	var httpHandler http.Handler = handler
 	if cfg.WebDir != "" {
@@ -127,10 +136,11 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 	}
 
 	return &App{
-		cfg:    cfg,
-		logger: logger,
-		store:  s,
-		probe:  probe,
+		cfg:      cfg,
+		logger:   logger,
+		store:    s,
+		probe:    probe,
+		sessions: sessionsService,
 		server: &http.Server{
 			Addr:              cfg.HTTPAddr,
 			Handler:           httpHandler,
@@ -138,6 +148,24 @@ func New(cfg config.Config, logger *slog.Logger, version string) (*App, error) {
 			IdleTimeout:       60 * time.Second,
 		},
 	}, nil
+}
+
+func (a *App) recoveryLoop(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			recovered, err := a.sessions.RecoverStale(context.Background(), 2*time.Minute)
+			if err != nil {
+				a.logger.Warn("stale session recovery failed", "error", err)
+			} else if recovered > 0 {
+				a.logger.Info("recovered stale play sessions", "count", recovered)
+			}
+		}
+	}
 }
 
 // Handler exposes the HTTP handler for tests and embedded use.
@@ -164,6 +192,10 @@ func (a *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	recoveryCtx, stopRecovery := context.WithCancel(ctx)
+	defer stopRecovery()
+	go a.recoveryLoop(recoveryCtx)
 
 	errCh := make(chan error, 1)
 	go func() {

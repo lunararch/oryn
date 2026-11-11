@@ -9,7 +9,17 @@
 - Docker for container checks
 - Optional: `golangci-lint`
 
-On CachyOS/Arch, Wails prerequisites will be needed for the desktop milestone (`webkit2gtk-4.1`, `gtk3`, `gcc`, `pkg-config`). They are not needed for the server/web milestone.
+On CachyOS/Arch, the desktop core builds with the standard Go toolchain. The Wails 3 shell additionally requires GTK4 and `webkitgtk-6.0` development files (`gtk4`, `webkitgtk-6.0`). They are not needed for the server/web milestone.
+
+## Desktop core
+
+```sh
+cd apps/desktop
+go test ./...
+go run ./cmd/oryn-desktop-core --help
+```
+
+The Wails shell is not present yet; the core is independent and tested. See `apps/desktop/README.md`.
 
 ## First setup
 

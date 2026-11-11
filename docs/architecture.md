@@ -42,11 +42,13 @@ Mounted game share (read-only)
 - React web library with dashboard, search/filter/sort, grid/list views, details, favorites, metadata editing, scan history, and artwork controls.
 - Collections with create/edit/delete and membership toggles.
 - Manual play sessions, playtime totals, recently played, and session history.
+- Desktop client pairing, revocable bearer tokens, authenticated session start/heartbeat/finish, and stale-session recovery.
+- Desktop core module: safe path mapping, launch candidate detection, shell-free process execution, and session reporting.
 - Docker Compose deployment for ARM64 with a read-only game mount and an optional sentinel.
 - SQLite `VACUUM INTO` backup command.
 - Playwright browser tests using a mocked API.
 
-Not implemented yet: desktop pairing, Wails client, local launch, Wine/Proton, multi-user support, external metadata providers, and offline desktop cache.
+Not implemented yet: the Wails 3 desktop shell, Wine/Proton, multi-user support, external metadata providers, and offline desktop cache. The Wails CLI could not be built in the development environment because GTK4/`webkitgtk-6.0` development files are not installed; the desktop core is tested independently and is ready to bind to a Wails service layer.
 
 ## Scanning safety
 
@@ -76,8 +78,9 @@ Current tables:
   - `settings`
   - `play_sessions`
   - `collections`, `collection_games`
+  - `desktop_clients`, `pairing_codes`
 
-Future migrations will add desktop clients and richer genre/tag data. Do not add those tables until the behavior is implemented.
+Future migrations will add richer genre/tag data. Do not add those tables until the behavior is implemented.
 
 Paths are stored relative to the library root, using `/` separators. Absolute server paths are deployment details and are not exposed by the API.
 

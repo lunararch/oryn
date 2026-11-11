@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/lunararch/oryn/apps/server/internal/artwork"
+	"github.com/lunararch/oryn/apps/server/internal/clients"
 	"github.com/lunararch/oryn/apps/server/internal/collections"
 	"github.com/lunararch/oryn/apps/server/internal/games"
 	"github.com/lunararch/oryn/apps/server/internal/scanner"
@@ -41,6 +42,7 @@ type Options struct {
 	Artwork       *artwork.Service
 	Sessions      *sessions.Service
 	Collections   *collections.Service
+	Clients       *clients.Service
 }
 
 // New builds the HTTP API router.
@@ -76,6 +78,17 @@ func New(opts Options) http.Handler {
 		r.Put("/collections/{collectionID}/games/{gameID}", opts.addGameToCollection)
 		r.Delete("/collections/{collectionID}/games/{gameID}", opts.removeGameFromCollection)
 		r.Get("/games/{gameID}/collections", opts.listCollectionsForGame)
+
+		r.Post("/clients/pairing-codes", opts.createPairingCode)
+		r.Post("/clients/register", opts.registerClient)
+		r.Get("/clients", opts.listClients)
+		r.Delete("/clients/{clientID}", opts.revokeClient)
+		r.Group(func(r chi.Router) {
+			r.Use(opts.requireClient)
+			r.Post("/sessions", opts.startDesktopSession)
+			r.Post("/sessions/{sessionID}/heartbeat", opts.desktopHeartbeat)
+			r.Post("/sessions/{sessionID}/finish", opts.finishDesktopSession)
+		})
 
 		r.Get("/stats", opts.getStats)
 		r.Get("/artwork/{artworkID}/{variant}", opts.getArtwork)

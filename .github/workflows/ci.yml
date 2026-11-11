@@ -21,6 +21,21 @@ jobs:
       - run: go vet ./...
       - run: go test ./...
 
+  desktop:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.4"
+          cache-dependency-path: apps/desktop/go.sum
+      - run: gofmt -l . | tee /tmp/gofmt-desktop.out && test ! -s /tmp/gofmt-desktop.out
+      - run: go vet ./...
+      - run: go test ./...
+
   web:
     runs-on: ubuntu-latest
     defaults:

@@ -114,6 +114,7 @@ func toPlaySessionDTO(session sessions.Session) api.PlaySession {
 	return api.PlaySession{
 		ID:              session.ID,
 		GameID:          session.GameID,
+		ClientID:        session.ClientID,
 		StartedAt:       formatUnix(session.StartedAt),
 		EndedAt:         formatUnix(session.EndedAt),
 		DurationSeconds: session.DurationSeconds,
@@ -121,5 +122,6 @@ func toPlaySessionDTO(session sessions.Session) api.PlaySession {
 		Source:          session.Source,
 		ExitCode:        session.ExitCode,
 		Notes:           session.Notes,
+		LastHeartbeatAt: formatUnix(session.LastHeartbeatAt),
 	}
 }

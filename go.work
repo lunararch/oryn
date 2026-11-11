@@ -1,3 +1,6 @@
 go 1.27.3
 
-use ./apps/server
+use (
+	./apps/server
+	./apps/desktop
+)

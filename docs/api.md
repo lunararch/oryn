@@ -188,6 +188,36 @@ Playtime totals include `completed` and `interrupted` sessions. Running sessions
 
 Collection names are unique case-insensitively and limited to 100 characters; descriptions are limited to 2000 characters. Collections do not move or modify game folders.
 
+## Desktop pairing and sessions
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/clients/pairing-codes` | LAN web | Create a one-time pairing code |
+| POST | `/clients/register` | pairing code | Exchange a code for a client token |
+| GET | `/clients` | LAN web | List paired clients |
+| DELETE | `/clients/{id}` | LAN web | Revoke a client |
+| POST | `/sessions` | bearer token | Start a desktop session |
+| POST | `/sessions/{id}/heartbeat` | bearer token | Renew the session lease |
+| POST | `/sessions/{id}/finish` | bearer token | Report process exit |
+
+Pairing codes are single-use, valid for ten minutes, and stored as bcrypt hashes. Client tokens are high-entropy bearer credentials stored as SHA-256 hashes and can be revoked. The plaintext token is returned only once at registration.
+
+Start session request:
+
+```json
+{ "gameId": "01..." }
+```
+
+The response includes `heartbeatIntervalSeconds` (30) and `timeoutSeconds` (120). A client may have only one running session at a time. The desktop sends a heartbeat periodically and finishes with:
+
+```json
+{ "status": "completed", "exitCode": 0 }
+```
+
+`status` must be `completed` or `failed`. If a client disappears, the server marks the session `interrupted` and ends its duration at the last heartbeat, never at recovery time.
+
+The web UI is still unauthenticated on the trusted LAN. Client tokens protect privileged desktop session operations and can be revoked. Do not expose Oryn to the public internet.
+
 ## Authentication
 
 There is no user authentication yet. Oryn is designed for a trusted home LAN and must not be exposed directly to the internet. Desktop pairing tokens and revocable client credentials are planned before desktop session endpoints are added.

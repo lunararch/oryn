@@ -36,6 +36,16 @@ type CollectionGame struct {
 	AddedAt      int64
 }
 
+type DesktopClient struct {
+	ID           string
+	Name         string
+	Platform     string
+	TokenHash    string
+	RegisteredAt int64
+	LastSeenAt   int64
+	RevokedAt    sql.NullInt64
+}
+
 type Favorite struct {
 	GameID    string
 	CreatedAt int64
@@ -84,6 +94,14 @@ type Library struct {
 	LastScanAt sql.NullInt64
 }
 
+type PairingCode struct {
+	ID        string
+	CodeHash  string
+	ExpiresAt int64
+	UsedAt    sql.NullInt64
+	CreatedAt int64
+}
+
 type PlaySession struct {
 	ID              string
 	GameID          string
@@ -97,6 +115,7 @@ type PlaySession struct {
 	Notes           string
 	CreatedAt       int64
 	UpdatedAt       int64
+	LastHeartbeatAt sql.NullInt64
 }
 
 type ScanError struct {

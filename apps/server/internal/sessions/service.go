@@ -19,6 +19,8 @@ var (
 	ErrNotFound = errors.New("session not found")
 	// ErrValidation is returned for invalid manual session input.
 	ErrValidation = errors.New("validation failed")
+	// ErrAlreadyRunning is returned when a client already has a running session.
+	ErrAlreadyRunning = errors.New("a session is already running for this client")
 )
 
 const (
@@ -31,6 +33,7 @@ const (
 type Session struct {
 	ID              string
 	GameID          string
+	ClientID        string
 	StartedAt       int64
 	EndedAt         int64
 	DurationSeconds int
@@ -38,6 +41,7 @@ type Session struct {
 	Source          string
 	ExitCode        *int
 	Notes           string
+	LastHeartbeatAt int64
 }
 
 // Page is a paged session list.
@@ -186,6 +190,122 @@ func (s *Service) DeleteManual(ctx context.Context, id string) error {
 	return nil
 }
 
+// StartDesktop starts a running session owned by a paired desktop client.
+func (s *Service) StartDesktop(ctx context.Context, clientID, gameID string) (Session, error) {
+	q := db.New(s.store.DB)
+	if _, err := q.GetGame(ctx, gameID); errors.Is(err, sql.ErrNoRows) {
+		return Session{}, ErrNotFound
+	} else if err != nil {
+		return Session{}, fmt.Errorf("get game: %w", err)
+	}
+	if _, err := q.GetRunningSessionForClient(ctx, sql.NullString{String: clientID, Valid: true}); err == nil {
+		return Session{}, ErrAlreadyRunning
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return Session{}, fmt.Errorf("check running session: %w", err)
+	}
+
+	id := uuid.Must(uuid.NewV7()).String()
+	now := s.now()
+	if err := q.InsertDesktopSession(ctx, db.InsertDesktopSessionParams{
+		ID:              id,
+		GameID:          gameID,
+		ClientID:        sql.NullString{String: clientID, Valid: true},
+		StartedAt:       now.Unix(),
+		CreatedAt:       now.Unix(),
+		UpdatedAt:       now.Unix(),
+		LastHeartbeatAt: sql.NullInt64{Int64: now.Unix(), Valid: true},
+	}); err != nil {
+		return Session{}, fmt.Errorf("start desktop session: %w", err)
+	}
+	return s.Get(ctx, id)
+}
+
+// Heartbeat records a client heartbeat for a running session.
+func (s *Service) Heartbeat(ctx context.Context, clientID, sessionID string) error {
+	current, err := s.Get(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if current.ClientID != clientID || current.Status != "running" {
+		return fmt.Errorf("%w: session is not owned by this client or is not running", ErrValidation)
+	}
+	now := s.now().Unix()
+	if err := db.New(s.store.DB).HeartbeatSession(ctx, db.HeartbeatSessionParams{
+		LastHeartbeatAt: sql.NullInt64{Int64: now, Valid: true},
+		UpdatedAt:       now,
+		ID:              sessionID,
+	}); err != nil {
+		return fmt.Errorf("heartbeat session: %w", err)
+	}
+	return nil
+}
+
+// FinishDesktop records the end of a desktop session.
+func (s *Service) FinishDesktop(ctx context.Context, clientID, sessionID, status string, exitCode *int) (Session, error) {
+	if status != "completed" && status != "failed" {
+		return Session{}, fmt.Errorf("%w: status must be completed or failed", ErrValidation)
+	}
+	current, err := s.Get(ctx, sessionID)
+	if err != nil {
+		return Session{}, err
+	}
+	if current.ClientID != clientID || current.Status != "running" {
+		return Session{}, fmt.Errorf("%w: session is not owned by this client or is not running", ErrValidation)
+	}
+	now := s.now().Unix()
+	duration := max(0, now-current.StartedAt)
+	exit := sql.NullInt64{}
+	if exitCode != nil {
+		exit = sql.NullInt64{Int64: int64(*exitCode), Valid: true}
+	}
+	if err := db.New(s.store.DB).FinishSession(ctx, db.FinishSessionParams{
+		Status:          status,
+		EndedAt:         sql.NullInt64{Int64: now, Valid: true},
+		DurationSeconds: duration,
+		ExitCode:        exit,
+		UpdatedAt:       now,
+		ID:              sessionID,
+	}); err != nil {
+		return Session{}, fmt.Errorf("finish desktop session: %w", err)
+	}
+	return s.Get(ctx, sessionID)
+}
+
+// RecoverStale marks running sessions with no recent heartbeat as interrupted.
+// The duration ends at the last heartbeat, never at recovery time.
+func (s *Service) RecoverStale(ctx context.Context, timeout time.Duration) (int, error) {
+	if timeout <= 0 {
+		timeout = 2 * time.Minute
+	}
+	now := s.now()
+	q := db.New(s.store.DB)
+	stale, err := q.ListStaleRunningSessions(ctx, sql.NullInt64{
+		Int64: now.Add(-timeout).Unix(),
+		Valid: true,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("list stale sessions: %w", err)
+	}
+	recovered := 0
+	for _, row := range stale {
+		ended := row.StartedAt
+		if row.LastHeartbeatAt.Valid {
+			ended = row.LastHeartbeatAt.Int64
+		}
+		duration := max(0, ended-row.StartedAt)
+		if err := q.MarkSessionInterrupted(ctx, db.MarkSessionInterruptedParams{
+			EndedAt:         sql.NullInt64{Int64: ended, Valid: true},
+			DurationSeconds: duration,
+			UpdatedAt:       now.Unix(),
+			ID:              row.ID,
+		}); err != nil {
+			return recovered, fmt.Errorf("interrupt stale session: %w", err)
+		}
+		recovered++
+	}
+	return recovered, nil
+}
+
 // Stats returns playtime totals for a library.
 func (s *Service) Stats(ctx context.Context, libraryID string) (Stats, error) {
 	row, err := db.New(s.store.DB).GetPlayStats(ctx, libraryID)
@@ -227,12 +347,18 @@ func sessionFromRow(row db.PlaySession) Session {
 		Source:          row.Source,
 		Notes:           row.Notes,
 	}
+	if row.ClientID.Valid {
+		session.ClientID = row.ClientID.String
+	}
 	if row.EndedAt.Valid {
 		session.EndedAt = row.EndedAt.Int64
 	}
 	if row.ExitCode.Valid {
 		value := int(row.ExitCode.Int64)
 		session.ExitCode = &value
+	}
+	if row.LastHeartbeatAt.Valid {
+		session.LastHeartbeatAt = row.LastHeartbeatAt.Int64
 	}
 	return session
 }

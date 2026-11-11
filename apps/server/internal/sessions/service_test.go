@@ -121,6 +121,7 @@ func TestPlayStats(t *testing.T) {
 
 type sessionsFixture struct {
 	service *Service
+	store   *store.Store
 	library db.Library
 	gameID  string
 }
@@ -158,6 +159,7 @@ func newSessionsFixture(t *testing.T) *sessionsFixture {
 	}
 	return &sessionsFixture{
 		service: NewService(s, time.Now),
+		store:   s,
 		library: lib,
 		gameID:  gameID,
 	}
