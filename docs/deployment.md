@@ -56,7 +56,8 @@ curl -s http://127.0.0.1:8080/api/v1/health
 | Variable | Default | Notes |
 |---|---|---|
 | `ORYN_HTTP_ADDR` | `:8080` in the container | Keep bound to the LAN address |
-| `ORYN_DATA_DIR` | `/data` | SQLite, artwork, backups |
+| `ORYN_DATA_DIR` | `/data` | SQLite, artwork, backups (container path) |
+| `ORYN_DATA_PATH` | `./data` | Host path bind-mounted to `/data` |
 | `ORYN_WEB_DIR` | `/app/web` | Built frontend |
 | `ORYN_LIBRARY_ROOT` | `/games` | Container path for the read-only share |
 | `ORYN_LIBRARY_SENTINEL` | unset | Existing path inside the share |
