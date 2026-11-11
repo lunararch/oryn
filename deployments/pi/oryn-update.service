@@ -1,0 +1,23 @@
+[Unit]
+Description=Oryn automatic release update
+Documentation=https://github.com/lunararch/oryn/blob/main/deployments/pi/README.md
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=tim
+Group=tim
+Environment=HOME=/home/tim
+WorkingDirectory=/home/tim/Documents/projects/oryn
+ExecStart=/usr/local/bin/oryn-updater \
+    --repo /home/tim/Documents/projects/oryn \
+    --compose deployments/docker/compose.yaml \
+    --env deployments/docker/.env \
+    --health-url http://127.0.0.1:8082/api/v1/health \
+    --state /home/tim/oryn/update-state.json \
+    --ssh-key /home/tim/.ssh/oryn_deploy \
+    --sudo
+TimeoutStartSec=30min
+Nice=10
+IOSchedulingClass=idle

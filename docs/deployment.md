@@ -103,6 +103,13 @@ Do not copy a live database file while it is being written; use the backup comma
 
 Because the game share is read-only and all Oryn state lives in `/data`, the container can be recreated without touching game files.
 
+## Automatic updates
+
+A Raspberry Pi auto-updater is documented in `deployments/pi/README.md`. It
+uses a read-only GitHub deploy key, a systemd timer, a pre-update SQLite backup,
+and a health-check rollback. Releases are selected from stable `vX.Y.Z` tags;
+until a stable tag exists, the updater follows `main`.
+
 ## Troubleshooting
 
 - **Health says library unavailable**: the host mount is missing or the sentinel does not exist. Fix the mount; do not rescan repeatedly.

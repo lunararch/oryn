@@ -13,14 +13,16 @@ The full product plan lives in `oryn_renpy-library-project-plan.md`. Project eng
 
 The central library milestone is implemented: the server scans a read-only game directory, indexes Ren'Py games, extracts conservative metadata, detects artwork, records manual play sessions, and serves a React library with search, sorting, favorites, collections, metadata editing, artwork uploads, playtime, and scan history.
 
-The desktop core (safe path mapping, candidate detection, process monitoring, pairing/session reporting) is also implemented. The Wails 3 shell is pending because the development machine lacks GTK4/`webkitgtk-6.0` development packages; see `apps/desktop/README.md`. See `docs/architecture.md` for the boundary between implemented and planned behavior.
+The desktop core (safe path mapping, candidate detection, process monitoring, pairing/session reporting) is also implemented. The Wails CLI now builds after installing `webkitgtk-6.0`; the Wails shell itself is the next desktop step. See `apps/desktop/README.md` and `deployments/pi/README.md`.
+
+The Raspberry Pi deployment is live on `http://pinas.local:8082` and has a systemd auto-updater that follows stable release tags (or `main` until the first tag), takes a pre-update backup, and rolls back on a failed health check.
 
 Documentation:
 
 - `docs/architecture.md` — components, data model, scanning safety
 - `docs/api.md` — HTTP contract
 - `docs/development.md` — local setup and code generation
-- `docs/deployment.md` — Raspberry Pi deployment and backups
+- `docs/deployment.md` — Raspberry Pi deployment, backups, and auto-update
 
 ## Repository layout
 

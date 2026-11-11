@@ -5,7 +5,7 @@ SERVER_DIR := apps/server
 FRONTEND_DIR := apps/frontend
 DESKTOP_DIR := apps/desktop
 
-.PHONY: help setup dev dev-server dev-web test test-server test-desktop test-web e2e lint lint-server lint-desktop lint-web build build-server build-desktop build-web fmt api-types
+.PHONY: help setup dev dev-server dev-web test test-server test-desktop test-web e2e lint lint-server lint-desktop lint-web build build-server build-desktop build-updater build-updater-arm64 build-web fmt api-types
 
 help:
 	@printf '%s\n' \
@@ -67,7 +67,7 @@ lint-desktop:
 lint-web:
 	cd $(FRONTEND_DIR) && npm run lint && npm run typecheck
 
-build: build-web build-server build-desktop
+build: build-web build-server build-desktop build-updater
 
 build-web:
 	cd $(FRONTEND_DIR) && npm run build
@@ -79,6 +79,14 @@ build-server:
 build-desktop:
 	mkdir -p $(DESKTOP_DIR)/bin
 	cd $(DESKTOP_DIR) && go build -trimpath -o bin/oryn-desktop-core ./cmd/oryn-desktop-core
+
+build-updater:
+	mkdir -p $(SERVER_DIR)/bin
+	cd $(SERVER_DIR) && CGO_ENABLED=0 go build -trimpath -o bin/oryn-updater ./cmd/oryn-updater
+
+build-updater-arm64:
+	mkdir -p $(SERVER_DIR)/bin
+	cd $(SERVER_DIR) && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o bin/oryn-updater-linux-arm64 ./cmd/oryn-updater
 
 api-types:
 	cd $(SERVER_DIR) && tygo generate --config tygo.yaml
