@@ -4,7 +4,7 @@ SHELL := /bin/bash
 SERVER_DIR := apps/server
 FRONTEND_DIR := apps/frontend
 
-.PHONY: help setup dev dev-server dev-web test test-server test-web lint lint-server lint-web build build-server build-web fmt api-types
+.PHONY: help setup dev dev-server dev-web test test-server test-web e2e lint lint-server lint-web build build-server build-web fmt api-types
 
 help:
 	@printf '%s\n' \
@@ -14,6 +14,7 @@ help:
 	  '  make dev-server  Run only the Go API server' \
 	  '  make dev-web     Run only the Vite dev server' \
 	  '  make test        Run all Go and frontend tests' \
+	  '  make e2e         Run Playwright browser tests' \
 	  '  make lint        Run Go vet and frontend lint/type-check' \
 	  '  make build       Build the frontend and server binary' \
 	  '  make api-types   Regenerate TypeScript API types from Go' \
@@ -42,6 +43,9 @@ test-server:
 
 test-web:
 	cd $(FRONTEND_DIR) && npm run test -- --run
+
+e2e:
+	cd $(FRONTEND_DIR) && npm run e2e -- --project=chromium
 
 lint: lint-server lint-web
 

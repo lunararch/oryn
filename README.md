@@ -11,9 +11,9 @@ The full product plan lives in `oryn_renpy-library-project-plan.md`. Project eng
 
 ## Status
 
-The central library milestone is implemented: the server scans a read-only game directory, indexes Ren'Py games, extracts conservative metadata, detects artwork, and serves a React library with search, sorting, favorites, metadata editing, artwork uploads, and scan history.
+The central library milestone is implemented: the server scans a read-only game directory, indexes Ren'Py games, extracts conservative metadata, detects artwork, records manual play sessions, and serves a React library with search, sorting, favorites, collections, metadata editing, artwork uploads, playtime, and scan history.
 
-Not implemented yet: collections, play sessions, desktop client/pairing, and local game launching. See `docs/architecture.md` for the boundary between implemented and planned behavior.
+Desktop pairing, the Wails client, and local launching are the next major milestone. See `docs/architecture.md` for the boundary between implemented and planned behavior.
 
 Documentation:
 

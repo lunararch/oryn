@@ -72,6 +72,16 @@ cd apps/frontend
 npm run test -- --run src/components/GameCard.test.tsx
 ```
 
+Install the Playwright browser once and run the browser tests:
+
+```sh
+cd apps/frontend
+npx playwright install chromium
+npm run e2e -- --project=chromium
+```
+
+The E2E tests mock `/api/v1`; they exercise the shared UI without a backend.
+
 ## Code generation
 
 Database access uses sqlc. After changing `query/*.sql` or migrations:

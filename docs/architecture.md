@@ -40,10 +40,13 @@ Mounted game share (read-only)
 - Idempotent scans with history, cancellation, partial-error handling, and mass-missing protection.
 - Artwork discovery, validation, cached card/detail variants, and user uploads.
 - React web library with dashboard, search/filter/sort, grid/list views, details, favorites, metadata editing, scan history, and artwork controls.
+- Collections with create/edit/delete and membership toggles.
+- Manual play sessions, playtime totals, recently played, and session history.
 - Docker Compose deployment for ARM64 with a read-only game mount and an optional sentinel.
 - SQLite `VACUUM INTO` backup command.
+- Playwright browser tests using a mocked API.
 
-Not implemented yet: collections, genres, play sessions, desktop pairing, Wails client, local launch, Wine/Proton, multi-user support, external metadata providers, and offline desktop cache.
+Not implemented yet: desktop pairing, Wails client, local launch, Wine/Proton, multi-user support, external metadata providers, and offline desktop cache.
 
 ## Scanning safety
 
@@ -65,16 +68,16 @@ The scanner treats the game share as untrusted and read-only.
 
 Current tables:
 
-- `libraries`
-- `games`
-- `game_overrides`
-- `favorites`
-- `artwork`
-- `scan_runs`
-- `scan_errors`
-- `settings`
+  - `game_overrides`
+  - `favorites`
+  - `artwork`
+  - `scan_runs`
+  - `scan_errors`
+  - `settings`
+  - `play_sessions`
+  - `collections`, `collection_games`
 
-Future migrations will add genres, collections, desktop clients, and play sessions. Do not add those tables until the behavior is implemented.
+Future migrations will add desktop clients and richer genre/tag data. Do not add those tables until the behavior is implemented.
 
 Paths are stored relative to the library root, using `/` separators. Absolute server paths are deployment details and are not exposed by the API.
 

@@ -44,8 +44,10 @@ No stack traces, SQL, absolute server paths, or secrets are returned.
 | `sort` | `title`, `added`, `updated`, `lastSeen`, `path` | `title` |
 | `order` | `asc`, `desc` | `asc` for title, otherwise `desc` |
 | `favorite` | `true`, `false` | unset |
+| `played` | `true`, `false` (has a completed/interrupted session) | unset |
 | `availability` | `available`, `missing` | unset |
 | `completion` | `unplayed`, `playing`, `completed`, `dropped`, `on_hold` | unset |
+| `collection` | collection ID | unset |
 
 Response:
 
@@ -114,7 +116,7 @@ The server validates decoded content, generates variants, stores them outside th
 | Method | Path | Purpose |
 |---|---|---|
 | POST | `/scans` | Start a background scan |
-| GET | `/scans/current` | Current or most recent in-memory scan state |
+| GET | `/scans/current` | Current or most recent scan state |
 | GET | `/scans` | Recent scan runs (latest 25) |
 | GET | `/scans/{id}` | Scan run details |
 | POST | `/scans/{id}/cancel` | Request cancellation |
@@ -132,6 +134,59 @@ Returns `202` with a scan state. A second start while one is running returns `40
 Scan statuses: `running`, `completed`, `partial`, `failed`, `cancelled`.
 
 A failed or partial scan never marks games missing. If a readable root discovers zero games while games are already indexed, the scan fails and preserves the library.
+
+## Play sessions
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/games/{id}/sessions` | Session history for a game |
+| POST | `/games/{id}/sessions` | Record a manual completed session |
+| PATCH | `/sessions/{id}` | Correct a manual session |
+| DELETE | `/sessions/{id}` | Delete a manual session |
+
+Manual session request:
+
+```json
+{
+  "startedAt": "2026-01-01T18:00:00Z",
+  "endedAt": "2026-01-01T19:30:00Z",
+  "notes": "Finished the first route"
+}
+```
+
+Timestamps must be RFC3339. End must be after start; sessions cannot end in the future, be longer than seven days, or start more than five minutes in the future. Only `source=manual` sessions can be edited or deleted.
+
+Session response:
+
+```json
+{
+  "id": "01...",
+  "gameId": "01...",
+  "startedAt": "2026-01-01T18:00:00Z",
+  "endedAt": "2026-01-01T19:30:00Z",
+  "durationSeconds": 5400,
+  "status": "completed",
+  "source": "manual",
+  "notes": "Finished the first route"
+}
+```
+
+Playtime totals include `completed` and `interrupted` sessions. Running sessions are not yet part of the web API; desktop tracking arrives with the desktop client.
+
+## Collections
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/collections` | List collections with game counts |
+| POST | `/collections` | Create a collection |
+| GET | `/collections/{id}` | Collection details |
+| PATCH | `/collections/{id}` | Rename/update description |
+| DELETE | `/collections/{id}` | Delete the collection (games are untouched) |
+| PUT | `/collections/{id}/games/{gameId}` | Add game (idempotent) |
+| DELETE | `/collections/{id}/games/{gameId}` | Remove game |
+| GET | `/games/{id}/collections` | All collections with `contains` flags |
+
+Collection names are unique case-insensitively and limited to 100 characters; descriptions are limited to 2000 characters. Collections do not move or modify game folders.
 
 ## Authentication
 
