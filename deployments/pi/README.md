@@ -141,6 +141,9 @@ sudo docker compose --env-file .env up -d
 Migrations in this repository are currently additive, but future changes must
 still be treated as forward-only in production.
 
+After an automatic update the checkout is on a detached commit. To make manual
+changes, first run `git checkout main && git pull --ff-only`.
+
 ## Security notes
 
 - The Pi is on the trusted LAN. Do not expose port `8082` to the internet.

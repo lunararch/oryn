@@ -10,10 +10,10 @@ This module contains the security-critical desktop core:
 - non-secret desktop configuration
 
 The Wails 3 shell is not built yet. Wails v3 on Linux requires GTK4 and
-`webkitgtk-6.0` development files, which are not installed in the development
-environment (`webkit2gtk-4.1` is present instead). The core is deliberately
-kept independent of Wails so it can be tested now and bound to a Wails service
-layer once the required system packages are installed.
+`webkitgtk-6.0` development files. These are now installed on the main
+development machine and `wails3` v3.1.0 is available. The core remains
+independent of Wails so it can be tested without a GUI and bound to a Wails
+service layer next.
 
 A diagnostic launcher is available:
 

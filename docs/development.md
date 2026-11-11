@@ -9,7 +9,14 @@
 - Docker for container checks
 - Optional: `golangci-lint`
 
-On CachyOS/Arch, the desktop core builds with the standard Go toolchain. The Wails 3 shell additionally requires GTK4 and `webkitgtk-6.0` development files (`gtk4`, `webkitgtk-6.0`). They are not needed for the server/web milestone.
+On CachyOS/Arch, the desktop core builds with the standard Go toolchain. The Wails 3 shell additionally requires GTK4 and `webkitgtk-6.0` development files (`gtk4`, `webkitgtk-6.0`). Install the Wails CLI with:
+
+```sh
+go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+wails3 doctor
+```
+
+They are not needed for the server/web milestone.
 
 ## Desktop core
 
